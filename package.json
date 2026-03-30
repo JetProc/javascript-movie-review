@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "test-unit": "jest --no-cache",
+    "test-unit": "vitest",
     "test-e2e": "cypress open",
     "deploy": "vite build --base=/javascript-movie-review/ --minify=false && npx gh-pages -d dist"
   },
@@ -21,23 +21,15 @@
   },
   "homepage": "https://{username}.github.io/javascript-movie-review",
   "devDependencies": {
-    "vite": "^7.3.1",
     "@babel/core": "^7.29.0",
     "@babel/preset-env": "^7.29.0",
     "@babel/preset-typescript": "^7.28.5",
-    "@types/jest": "^30.0.0",
-    "babel-jest": "^30.2.0",
-    "jest": "^30.2.0",
     "cypress": "^15.11.0",
     "eslint": "^10.0.2",
     "prettier": "^3.8.1",
-    "typescript": "~5.9.3"
-  },
-  "jest": {
-    "transform": {
-      "^.+\\.js$": "babel-jest",
-      "^.+\\.ts$": "babel-jest"
-    }
+    "typescript": "~5.9.3",
+    "vite": "^7.3.1",
+    "vitest": "^4.1.2"
   },
   "babel": {
     "presets": [
