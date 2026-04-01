@@ -1,16 +1,37 @@
 @import "./colors.css";
 
-.thumbnail-list {
+.thumbnail-list,
+.skeleton-card {
   margin: 0 auto 56px;
   display: grid;
   grid-template-columns: repeat(5, 200px);
   gap: 70px;
 }
 
+.skeleton-card:empty {
+  display: none;
+  margin: 0;
+}
+
 .thumbnail {
   width: 200px;
   height: 300px;
   border-radius: 8px;
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-bluegray-80) 0%,
+    var(--color-bluegray-30) 50%,
+    var(--color-bluegray-80) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.2s ease-in-out infinite;
+}
+
+.thumbnail-skeleton {
+  display: block;
 }
 
 .item {
@@ -34,7 +55,46 @@ p.rate > span {
   margin-left: 4px;
 }
 
+.rate-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  color: transparent;
+}
+
+.rate-icon-skeleton {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.rate-value-skeleton {
+  display: block;
+  width: 48px;
+  height: 14px;
+  border-radius: 999px;
+}
+
+.title-skeleton {
+  width: 85%;
+  height: 20px;
+  border-radius: 6px;
+}
+
 .item .star {
   width: 16px;
   top: 1px;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
 }
