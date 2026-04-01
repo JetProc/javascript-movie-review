@@ -211,12 +211,7 @@ footer.footer p:not(:last-child) {
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    90deg,
-    rgba(10, 18, 34, 0.88) 0%,
-    rgba(10, 18, 34, 0.7) 42%,
-    rgba(10, 18, 34, 0.35) 100%
-  );
+  background: linear-gradient(90deg, rgba(10, 18, 34, 0.88) 0%, rgba(10, 18, 34, 0.7) 42%, rgba(10, 18, 34, 0.35) 100%);
 }
 
 .hero-shell {
@@ -260,6 +255,8 @@ footer.footer p:not(:last-child) {
 
 #see-more-btn {
   width: 100%;
+
+  margin-top: 40px;
 
   color: #fff;
 

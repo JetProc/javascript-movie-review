@@ -1,8 +1,13 @@
 @import "./colors.css";
 
+:root {
+  --thumbnail-rate-height: 16px;
+  --thumbnail-title-height: 20px;
+  --thumbnail-desc-gap: 4px;
+}
+
 .thumbnail-list,
 .skeleton-card {
-  margin: 0 auto 56px;
   display: grid;
   grid-template-columns: repeat(5, 200px);
   gap: 70px;
@@ -35,24 +40,36 @@
 }
 
 .item {
+  display: flex;
+  flex-direction: column;
   user-select: none;
   cursor: pointer;
 }
 
-.item-desc > *:not(:last-child) {
-  position: relative;
-  margin-bottom: 4px;
-  line-height: 1.2rem;
+.item-desc {
+  display: flex;
+  flex-direction: column;
+  gap: var(--thumbnail-desc-gap);
+  min-height: calc(var(--thumbnail-rate-height) + var(--thumbnail-title-height) + var(--thumbnail-desc-gap));
+  padding-top: 4px;
 }
 
 p.rate {
   display: flex;
   align-items: baseline;
+  min-height: var(--thumbnail-rate-height);
+  line-height: var(--thumbnail-rate-height);
   color: var(--color-yellow);
 }
 
 p.rate > span {
   margin-left: 4px;
+}
+
+.item-desc > strong {
+  display: block;
+  min-height: var(--thumbnail-title-height);
+  line-height: var(--thumbnail-title-height);
 }
 
 .rate-skeleton {
@@ -74,13 +91,13 @@ p.rate > span {
 .rate-value-skeleton {
   display: block;
   width: 48px;
-  height: 14px;
+  height: var(--thumbnail-rate-height);
   border-radius: 999px;
 }
 
 .title-skeleton {
   width: 85%;
-  height: 20px;
+  height: var(--thumbnail-title-height);
   border-radius: 6px;
 }
 
