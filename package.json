@@ -39,5 +39,8 @@
   "engines": {
     "npm": ">=10.8.2",
     "node": ">=20.17.0"
+  },
+  "dependencies": {
+    "simple-notify": "^1.0.6"
   }
 }
