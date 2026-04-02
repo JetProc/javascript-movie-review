@@ -64,9 +64,9 @@ button.primary {
   background-color: var(--color-bluegray-100);
 }
 
-#app h2 {
-  font-size: 1.4rem;
-  font-weight: bold;
+.movie-section-title {
+  font-size: 36px;
+  font-weight: 600;
   margin-bottom: 32px;
 }
 
@@ -285,4 +285,26 @@ footer.footer p:not(:last-child) {
   border: none;
   border-radius: 8px;
   background-color: var(--color-lightblue-90);
+}
+
+.no-result {
+  display: flex;
+  justify-content: center;
+}
+
+.no-result-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  text-align: center;
+}
+
+.no-result-image {
+  width: 72px;
+}
+
+.no-result-text {
+  font-size: 36px;
+  font-weight: 600;
 }

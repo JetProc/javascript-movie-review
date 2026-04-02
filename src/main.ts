@@ -2,7 +2,7 @@ import type { AppElements } from "../types/dom";
 import type { Movie } from "../types/movie";
 import { fetchMoviePageData } from "./API/api";
 import type { FetchMoviePageDataResponse } from "./API/api.types";
-import { BASE_URL, SKELETON_MOVIE_COUNT, IMAGE_URL } from "./constants/constant";
+import { BASE_URL, SKELETON_MOVIE_COUNT, IMAGE_URL, PAGE_TITLE } from "./constants/constant";
 import type { State } from "../types/state";
 import { createImageUrl } from "./utils/MovieUtil";
 import { $ } from "./utils/util";
@@ -20,6 +20,8 @@ const getAppElements = (): AppElements => ({
   siteHeader: $<HTMLElement>(".site-header"),
   searchForm: $<HTMLFormElement>("#search-form"),
   searchInput: $<HTMLInputElement>("#search-input"),
+  noResult: $<HTMLDivElement>(".no-result"),
+  movieSectionTitle: $<HTMLHeadingElement>(".movie-section-title"),
 
   heroSection: $<HTMLElement>("#hero-section"),
   heroBackdrop: $<HTMLDivElement>("#hero-backdrop"),
@@ -86,6 +88,12 @@ const syncSeeMoreButton = (elements: AppElements) => {
   elements.seeMoreBtn.hidden = shouldHideSeeMoreButton;
 };
 
+const syncNoResultSection = (elements: AppElements) => {
+  const shouldHideNoResultSection = !(state.query !== "" && state.movieList.length === 0);
+
+  elements.noResult.hidden = shouldHideNoResultSection;
+};
+
 const updateMovieState = (newState: State) => {
   state.query = newState.query;
   state.currentPage = newState.currentPage;
@@ -122,10 +130,14 @@ const loadMovies = async (elements: AppElements) => {
     query: state.query,
   });
 
+  if (state.currentPage === 1) {
+    elements.movieSectionTitle.innerHTML = state.query ? PAGE_TITLE.SEARCH(state.query) : PAGE_TITLE.POPULAR;
+  }
   elements.skeletonCard.innerHTML = "";
 
   renderMovies(state.movieList, elements.movieList);
   syncSeeMoreButton(elements);
+  syncNoResultSection(elements);
 };
 
 const initializeMoviePage = async (elements: AppElements) => {

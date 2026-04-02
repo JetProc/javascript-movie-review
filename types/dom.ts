@@ -3,6 +3,8 @@ export interface AppElements {
   siteHeader: HTMLElement;
   searchForm: HTMLFormElement;
   searchInput: HTMLInputElement;
+  noResult: HTMLDivElement;
+  movieSectionTitle: HTMLHeadingElement;
 
   heroSection: HTMLElement;
   heroBackdrop: HTMLDivElement;

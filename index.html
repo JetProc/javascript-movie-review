@@ -47,10 +47,16 @@
       <div class="container">
         <main>
           <section>
-            <h2>지금 인기 있는 영화</h2>
+            <h2 class="movie-section-title"></h2>
             <div class="thumbnail-grid">
               <ul class="thumbnail-list"></ul>
               <ul class="skeleton-card"></ul>
+            </div>
+            <div class="no-result" hidden>
+              <div class="no-result-content">
+                <img class="no-result-image" src="/images/no-result-planet.png" alt="" aria-hidden="true" />
+                <p class="no-result-text">검색 결과가 없습니다.</p>
+              </div>
             </div>
           </section>
           <button type="text" id="see-more-btn">더 보기</button>

@@ -11,9 +11,15 @@ export const SKELETON_MOVIE_COUNT = 20;
 export const IMAGE_URL = {
   STAR_IMAGE_URL: "/images/star_empty.png",
   DEFAULT_THUMBNAIL_IMAGE_URL: `/images/default-thumbnail.jpeg`,
+  NO_RESULT_PLANET_IMAGE_URL: `/images/no-result-planet.png`,
 };
 
 export const API_PATH = {
   POPULAR_MOVIE: `/movie/popular`,
   SEARCH_MOVIE: `/search/movie`,
+};
+
+export const PAGE_TITLE = {
+  POPULAR: "지금 인기 있는 영화",
+  SEARCH: (query: string) => `"${query}" 검색 결과`,
 };
