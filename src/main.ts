@@ -80,6 +80,12 @@ const syncHeroSection = (elements: AppElements) => {
   renderHeroMovie(state.movieList[0], elements);
 };
 
+const syncSeeMoreButton = (elements: AppElements) => {
+  const shouldHideSeeMoreButton = state.currentPage >= state.totalPage;
+
+  elements.seeMoreBtn.hidden = shouldHideSeeMoreButton;
+};
+
 const updateMovieState = (newState: State) => {
   state.query = newState.query;
   state.currentPage = newState.currentPage;
@@ -119,6 +125,7 @@ const loadMovies = async (elements: AppElements) => {
   elements.skeletonCard.innerHTML = "";
 
   renderMovies(state.movieList, elements.movieList);
+  syncSeeMoreButton(elements);
 };
 
 const initializeMoviePage = async (elements: AppElements) => {
