@@ -17,9 +17,11 @@ const state: State = {
 // DOM 한 번에 가져오는 함수
 const getAppElements = (): AppElements => ({
   movieList: $<HTMLUListElement>(".thumbnail-list"),
+  siteHeader: $<HTMLElement>(".site-header"),
   searchForm: $<HTMLFormElement>("#search-form"),
   searchInput: $<HTMLInputElement>("#search-input"),
 
+  heroSection: $<HTMLElement>("#hero-section"),
   heroBackdrop: $<HTMLDivElement>("#hero-backdrop"),
   heroRate: $<HTMLDivElement>("#hero-rate"),
   heroRateValue: $<HTMLSpanElement>("#hero-rate-value"),
@@ -36,7 +38,6 @@ const fetchMoviePages = async (query: string): Promise<FetchMoviePageDataRespons
   return response;
 };
 
-//
 const createMovieListItemMarkup = (movie: Movie) => {
   const posterImageUrl = createImageUrl(BASE_URL.POSTER_BASE_URL, movie.thumbnail_path ?? "");
 
@@ -65,6 +66,18 @@ const renderHeroMovie = (movie: Movie, elements: AppElements) => {
   elements.heroRate.hidden = false;
   elements.heroRateValue.textContent = String(movie.rate);
   elements.heroTitle.textContent = movie.title;
+};
+
+const syncHeroSection = (elements: AppElements) => {
+  const shouldShowHero = state.query === "" && state.movieList.length > 0;
+
+  elements.heroSection.hidden = !shouldShowHero;
+
+  if (!shouldShowHero) {
+    return;
+  }
+
+  renderHeroMovie(state.movieList[0], elements);
 };
 
 const updateMovieState = (newState: State) => {
@@ -110,7 +123,7 @@ const loadMovies = async (elements: AppElements) => {
 
 const initializeMoviePage = async (elements: AppElements) => {
   await loadMovies(elements);
-  renderHeroMovie(state.movieList[0], elements);
+  syncHeroSection(elements);
 };
 
 const main = async () => {
@@ -129,18 +142,23 @@ window.addEventListener("load", () => {
 const bindEvents = (elements: AppElements) => {
   elements.seeMoreBtn.addEventListener("click", async (event) => {
     event.preventDefault();
-
-    //1. API 호출
     await loadMovies(elements);
-
-    //3. 그리기
   });
 
   elements.searchForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
-    //state의 쿼리를 elements.searchInput.value로 업데이트
+    const query = elements.searchInput.value.trim();
+
+    updateMovieState({
+      currentPage: 0,
+      totalPage: 0,
+      movieList: [],
+      query,
+    });
+    console.log(query);
 
     await loadMovies(elements);
+    syncHeroSection(elements);
   });
 };
