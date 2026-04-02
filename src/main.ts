@@ -74,6 +74,7 @@ const syncHeroSection = (elements: AppElements) => {
   const shouldShowHero = state.query === "" && state.movieList.length > 0;
 
   elements.heroSection.hidden = !shouldShowHero;
+  elements.siteHeader.classList.toggle("site-header--overlay", shouldShowHero);
 
   if (!shouldShowHero) {
     return;
