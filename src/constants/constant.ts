@@ -1,3 +1,5 @@
+const PUBLIC_IMAGE_BASE_URL = "./images/";
+
 export const BASE_URL = {
   TMDB_BASE_URL: "https://api.themoviedb.org/3",
   POSTER_BASE_URL: "https://image.tmdb.org/t/p/w200",
@@ -9,9 +11,9 @@ export const DEFAULT_LANGUAGE = "ko-KR";
 export const SKELETON_MOVIE_COUNT = 20;
 
 export const IMAGE_URL = {
-  STAR_IMAGE_URL: "/images/star_empty.png",
-  DEFAULT_THUMBNAIL_IMAGE_URL: `/images/default-thumbnail.jpeg`,
-  NO_RESULT_PLANET_IMAGE_URL: `/images/no-result-planet.png`,
+  STAR_IMAGE_URL: `${PUBLIC_IMAGE_BASE_URL}star_empty.png`,
+  DEFAULT_THUMBNAIL_IMAGE_URL: `${PUBLIC_IMAGE_BASE_URL}default-thumbnail.jpeg`,
+  NO_RESULT_PLANET_IMAGE_URL: `${PUBLIC_IMAGE_BASE_URL}no-result-planet.png`,
 };
 
 export const API_PATH = {
