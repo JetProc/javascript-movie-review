@@ -4,3 +4,8 @@ export const BASE_URL = {
 };
 
 export const SKELETON_MOVIE_COUNT = 20;
+
+export const IMAGE_URL = {
+  STAR_IMAGE_URL: "/images/star_empty.png",
+  DEFAULT_THUMBNAIL_IMAGE_URL: `/images/default-thumbnail.jpeg`,
+};

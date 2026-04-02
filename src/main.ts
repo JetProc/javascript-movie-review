@@ -2,7 +2,7 @@ import { AppElements } from "../types/dom";
 import { Movie } from "../types/movie";
 import { fetchMoviePageData } from "./API/api";
 import { FetchMoviePageDataResponse } from "./API/config";
-import { BASE_URL, SKELETON_MOVIE_COUNT, STAR_IMAGE_URL } from "./constants/constant";
+import { BASE_URL, SKELETON_MOVIE_COUNT, IMAGE_URL } from "./constants/constant";
 import { State } from "../types/state";
 import { createImageUrl } from "./utils/MovieUtil";
 import { $ } from "./utils/util";
@@ -45,7 +45,7 @@ const createMovieListItemMarkup = (movie: Movie) => {
       <img class="thumbnail" src="${posterImageUrl}" alt="${movie.title}" />
       <div class="item-desc">
         <p class="rate">
-          <img src="${STAR_IMAGE_URL}" class="star" alt="" aria-hidden="true" />
+          <img src="${IMAGE_URL.STAR_IMAGE_URL}" class="star" alt="" aria-hidden="true" />
           <span>${movie.rate}</span>
         </p>
         <strong>${movie.title}</strong>
