@@ -6,16 +6,15 @@
   --thumbnail-desc-gap: 4px;
 }
 
-.thumbnail-list,
-.skeleton-card {
+.thumbnail-grid {
   display: grid;
   grid-template-columns: repeat(5, 200px);
   gap: 70px;
 }
 
-.skeleton-card:empty {
-  display: none;
-  margin: 0;
+.thumbnail-list,
+.skeleton-card {
+  display: contents;
 }
 
 .thumbnail {
