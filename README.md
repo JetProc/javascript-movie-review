@@ -1,6 +1,8 @@
 # javascript-movie-review
 
 FE 레벨1 영화 리뷰 미션
+
+배포 링크: https://jetproc.github.io/javascript-movie-review
 # 구현 기능 목록
 
 ## 0. 📍 공통
