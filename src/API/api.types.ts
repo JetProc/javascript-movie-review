@@ -1,6 +1,6 @@
-import { Movie } from "../../types/movie";
+import type { Movie } from "../../types/movie";
 
-interface RequestOptions {
+export interface RequestOptions {
   method: "GET" | "POST";
   headers: {
     accept: string;
@@ -8,7 +8,7 @@ interface RequestOptions {
   };
 }
 
-interface FetchMoviePageDataResponse {
+export interface FetchMoviePageDataResponse {
   currentPage: number;
   totalPages: number;
   results: Movie[];
