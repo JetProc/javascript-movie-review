@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { fetchMoviePageData } from "../../src/API/api";
+import { API_REQUEST_TIMEOUT_MS } from "../../src/constants/constant";
 
 describe("fetchMoviePageData", () => {
   beforeEach(() => {
@@ -11,6 +12,7 @@ describe("fetchMoviePageData", () => {
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
+    vi.useRealTimers();
   });
 
   it("영화 목록 요청이 성공하면 매핑된 데이터를 반환한다", async () => {
@@ -50,13 +52,14 @@ describe("fetchMoviePageData", () => {
     expect(requestUrl.searchParams.get("language")).toBe("ko-KR");
     expect(requestUrl.searchParams.get("page")).toBe("2");
     expect(requestUrl.searchParams.get("query")).toBe("해리");
-    expect(requestOptions).toEqual({
+    expect(requestOptions).toMatchObject({
       method: "GET",
       headers: {
         accept: "application/json",
         Authorization: "Bearer test-api-key",
       },
     });
+    expect(requestOptions.signal).toBeInstanceOf(AbortSignal);
 
     expect(response).toEqual({
       currentPage: 2,
@@ -84,5 +87,29 @@ describe("fetchMoviePageData", () => {
     );
 
     await expect(fetchMoviePageData(1)).rejects.toThrow("영화 정보를 불러오는데 실패했습니다: 500");
+  });
+
+  it("응답이 너무 오래 걸리면 타임아웃 에러를 던진다", async () => {
+    vi.useFakeTimers();
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((_url: URL, requestOptions?: RequestInit) => {
+        return new Promise<Response>((_resolve, reject) => {
+          requestOptions?.signal?.addEventListener("abort", () => {
+            reject(new DOMException("The operation was aborted.", "AbortError"));
+          });
+        });
+      }),
+    );
+
+    const requestPromise = fetchMoviePageData(1);
+    const timeoutExpectation = expect(requestPromise).rejects.toThrow(
+      "영화 정보를 불러오는데 시간이 너무 오래 걸립니다. 다시 시도해주세요.",
+    );
+
+    await vi.advanceTimersByTimeAsync(API_REQUEST_TIMEOUT_MS);
+
+    await timeoutExpectation;
   });
 });
