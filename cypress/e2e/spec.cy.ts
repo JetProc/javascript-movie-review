@@ -6,6 +6,8 @@ const SEARCH_QUERY = "해리";
 const NO_RESULT_SEARCH_QUERY = "없는영화";
 const EMPTY_QUERY_WARNING_TITLE = "검색어를 입력해주세요";
 const EMPTY_QUERY_WARNING_TEXT = "영화 제목을 입력한 뒤 다시 시도해주세요.";
+const ERROR_TOAST_TITLE = "오류가 발생했습니다";
+const API_ERROR_TEXT = "영화 정보를 불러오는데 실패했습니다: 500";
 
 const createMovie = (id: number, titlePrefix: string) => ({
   id,
@@ -64,6 +66,36 @@ const mockPopularMoviePage = (page: number, alias = `getPopularMoviesPage${page}
     pathname: "/3/movie/popular",
     alias,
   });
+};
+
+const mockMoviePageError = ({
+  page,
+  pathname,
+  alias,
+  query,
+}: {
+  page: number;
+  pathname: string;
+  alias: string;
+  query?: string;
+}) => {
+  cy.intercept(
+    {
+      method: "GET",
+      hostname: "api.themoviedb.org",
+      pathname,
+      query: {
+        language: "ko-KR",
+        page: `${page}`,
+        ...(query ? { query } : {}),
+      },
+    },
+    {
+      delay: 300,
+      statusCode: 500,
+      body: {},
+    },
+  ).as(alias);
 };
 
 const mockSearchMoviePage = (page: number, alias = `getSearchMoviesPage${page}`) => {
@@ -129,6 +161,13 @@ const expectWarningToast = (title: string, text: string) => {
   cy.contains(".sn-notify-text", text).should("be.visible");
 };
 
+const expectErrorToast = (text: string) => {
+  cy.get(".sn-notifications-container").should("exist");
+  cy.get(".sn-notify.sn-notify-error").should("be.visible");
+  cy.contains(".sn-notify-title", ERROR_TOAST_TITLE).should("be.visible");
+  cy.contains(".sn-notify-text", text).should("be.visible");
+};
+
 const expectNoResultSection = () => {
   cy.get(".no-result").should("be.visible");
   cy.get(".no-result-image")
@@ -155,6 +194,31 @@ describe("메인 화면", () => {
     clickSeeMoreAndVerify(4, "getPopularMoviesPage4", "인기 영화");
 
     cy.get("#see-more-btn").should("not.be.visible");
+  });
+
+  it("더보기 요청이 실패하면 에러 토스트를 띄우고 기존 목록을 유지한다", () => {
+    mockMoviePageError({
+      page: 2,
+      pathname: "/3/movie/popular",
+      alias: "getPopularMoviesPage2Error",
+    });
+
+    cy.visit(APP_URL);
+
+    expectSkeletonUi();
+    cy.wait("@getPopularMoviesPage1");
+    expectMovieList(1, "인기 영화");
+
+    cy.get("#see-more-btn").should("be.visible").click();
+    expectSkeletonUi();
+    cy.wait("@getPopularMoviesPage2Error");
+
+    expectErrorToast(API_ERROR_TEXT);
+    expectMovieList(1, "인기 영화");
+    cy.get(".movie-section-title").should("have.text", "지금 인기 있는 영화");
+    cy.get("#hero-section").should("be.visible");
+    cy.get(".no-result").should("not.be.visible");
+    cy.get("#see-more-btn").should("be.visible");
   });
 });
 
@@ -259,5 +323,32 @@ describe("검색 화면", () => {
     expectNoResultSection();
     cy.get("#hero-section").should("not.be.visible");
     cy.get("#see-more-btn").should("not.be.visible");
+  });
+
+  it("검색 요청이 실패하면 에러 토스트를 띄우고 기존 메인 목록을 유지한다", () => {
+    mockMoviePageError({
+      page: 1,
+      pathname: "/3/search/movie",
+      alias: "getSearchMoviesPage1Error",
+      query: SEARCH_QUERY,
+    });
+
+    cy.visit(APP_URL);
+    cy.wait("@getPopularMoviesPage1");
+    expectMovieList(1, "인기 영화");
+
+    cy.get("#search-input").type(SEARCH_QUERY);
+    cy.get("#search-button").click();
+
+    expectSkeletonUi();
+    cy.wait("@getSearchMoviesPage1Error");
+
+    expectErrorToast(API_ERROR_TEXT);
+    expectMovieList(1, "인기 영화");
+    cy.get(".movie-section-title").should("have.text", "지금 인기 있는 영화");
+    cy.get("#search-input").should("have.value", SEARCH_QUERY);
+    cy.get("#hero-section").should("be.visible");
+    cy.get(".no-result").should("not.be.visible");
+    cy.get("#see-more-btn").should("be.visible");
   });
 });
