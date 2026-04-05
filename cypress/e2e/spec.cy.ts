@@ -4,6 +4,8 @@ const TOTAL_POPULAR_PAGES = 4;
 const TOTAL_SEARCH_PAGES = 3;
 const SEARCH_QUERY = "해리";
 const NO_RESULT_SEARCH_QUERY = "없는영화";
+const MALICIOUS_QUERY = "<img onerror=alert(1) src=x>";
+const MALICIOUS_TITLE_PREFIX = "<img onerror=alert(1) src=y>";
 const EMPTY_QUERY_WARNING_TITLE = "검색어를 입력해주세요";
 const EMPTY_QUERY_WARNING_TEXT = "영화 제목을 입력한 뒤 다시 시도해주세요.";
 const ERROR_TOAST_TITLE = "오류가 발생했습니다";
@@ -350,5 +352,36 @@ describe("검색 화면", () => {
     cy.get("#hero-section").should("be.visible");
     cy.get(".no-result").should("not.be.visible");
     cy.get("#see-more-btn").should("be.visible");
+  });
+
+  it("검색어와 영화 제목에 HTML이 포함되어도 텍스트로만 렌더링한다", () => {
+    mockMoviePage({
+      page: 1,
+      totalPages: 1,
+      titlePrefix: MALICIOUS_TITLE_PREFIX,
+      pathname: "/3/search/movie",
+      alias: "getMaliciousSearchMoviesPage1",
+      query: MALICIOUS_QUERY,
+    });
+
+    cy.visit(APP_URL);
+    cy.wait("@getPopularMoviesPage1");
+    cy.window().then((window) => {
+      cy.stub(window, "alert").as("alert");
+    });
+
+    cy.get("#search-input").type(MALICIOUS_QUERY, {
+      parseSpecialCharSequences: false,
+    });
+    cy.get("#search-button").click();
+
+    expectSkeletonUi();
+    cy.wait("@getMaliciousSearchMoviesPage1");
+
+    cy.get("@alert").should("not.have.been.called");
+    cy.get(".movie-section-title").should("have.text", `"${MALICIOUS_QUERY}" 검색 결과`);
+    cy.get(".movie-section-title img").should("not.exist");
+    cy.get(".thumbnail-list strong").first().should("have.text", `${MALICIOUS_TITLE_PREFIX} 1`);
+    cy.get(".thumbnail-list strong img").should("not.exist");
   });
 });
