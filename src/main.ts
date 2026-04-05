@@ -46,7 +46,7 @@ const updateMovieState = (newState: State) => {
 };
 
 const clearSkeleton = (elements: AppElements) => {
-  elements.skeletonCard.innerHTML = "";
+  elements.skeletonCard.replaceChildren();
 };
 
 const syncPage = (elements: AppElements) => {
@@ -72,7 +72,7 @@ const loadMovies = async (elements: AppElements, query: string = state.query, sh
     });
 
     if (state.currentPage === 1) {
-      elements.movieSectionTitle.innerHTML = state.query ? PAGE_TITLE.SEARCH(state.query) : PAGE_TITLE.POPULAR;
+      elements.movieSectionTitle.textContent = state.query ? PAGE_TITLE.SEARCH(state.query) : PAGE_TITLE.POPULAR;
     }
 
     renderMovies(state.movieList, elements.movieList);

@@ -3,25 +3,77 @@ import type { Movie } from "../../types/movie";
 import { BASE_URL, IMAGE_URL, SKELETON_MOVIE_COUNT } from "../constants/constant";
 import { createImageUrl } from "./MovieUtil";
 
-const createMovieListItemMarkup = (movie: Movie) => {
+const createMovieListItemElement = (movie: Movie) => {
   const posterImageUrl = createImageUrl(BASE_URL.POSTER_BASE_URL, movie.thumbnail_path ?? "");
 
-  return /* html */ `<li>
-    <div class="item">
-      <img class="thumbnail" src="${posterImageUrl}" alt="${movie.title}" />
-      <div class="item-desc">
-        <p class="rate">
-          <img src="${IMAGE_URL.STAR_IMAGE_URL}" class="star" alt="" aria-hidden="true" />
-          <span>${movie.rate}</span>
-        </p>
-        <strong>${movie.title}</strong>
-      </div>
-    </div>
-  </li>`;
+  const listItem = document.createElement("li");
+  const item = document.createElement("div");
+  const thumbnail = document.createElement("img");
+  const itemDesc = document.createElement("div");
+  const rate = document.createElement("p");
+  const star = document.createElement("img");
+  const rateValue = document.createElement("span");
+  const title = document.createElement("strong");
+
+  item.className = "item";
+
+  thumbnail.className = "thumbnail";
+  thumbnail.src = posterImageUrl;
+  thumbnail.alt = movie.title;
+
+  itemDesc.className = "item-desc";
+
+  rate.className = "rate";
+
+  star.src = IMAGE_URL.STAR_IMAGE_URL;
+  star.className = "star";
+  star.alt = "";
+  star.setAttribute("aria-hidden", "true");
+
+  rateValue.textContent = String(movie.rate);
+  title.textContent = movie.title;
+
+  rate.append(star, rateValue);
+  itemDesc.append(rate, title);
+  item.append(thumbnail, itemDesc);
+  listItem.append(item);
+
+  return listItem;
+};
+
+const createSkeletonListItemElement = () => {
+  const listItem = document.createElement("li");
+  const item = document.createElement("div");
+  const thumbnail = document.createElement("div");
+  const itemDesc = document.createElement("div");
+  const rate = document.createElement("p");
+  const rateIcon = document.createElement("span");
+  const rateValue = document.createElement("span");
+  const title = document.createElement("div");
+
+  item.className = "item";
+  item.setAttribute("aria-hidden", "true");
+
+  thumbnail.className = "thumbnail thumbnail-skeleton skeleton";
+
+  itemDesc.className = "item-desc";
+
+  rate.className = "rate rate-skeleton";
+
+  rateIcon.className = "rate-icon-skeleton skeleton";
+  rateValue.className = "rate-value-skeleton skeleton";
+  title.className = "title-skeleton skeleton";
+
+  rate.append(rateIcon, rateValue);
+  itemDesc.append(rate, title);
+  item.append(thumbnail, itemDesc);
+  listItem.append(item);
+
+  return listItem;
 };
 
 export const renderMovies = (movies: Movie[], movieListElement: HTMLUListElement) => {
-  movieListElement.innerHTML = movies.map(createMovieListItemMarkup).join("");
+  movieListElement.replaceChildren(...movies.map(createMovieListItemElement));
 };
 
 export const renderHeroMovie = (movie: Movie, elements: AppElements) => {
@@ -34,18 +86,5 @@ export const renderHeroMovie = (movie: Movie, elements: AppElements) => {
 };
 
 export const makeSkeleton = (skeletonCardElement: HTMLUListElement) => {
-  const skeletonItemMarkup = /* html */ `<li>
-    <div class="item" aria-hidden="true">
-      <div class="thumbnail thumbnail-skeleton skeleton"></div>
-      <div class="item-desc">
-        <p class="rate rate-skeleton">
-          <span class="rate-icon-skeleton skeleton"></span>
-          <span class="rate-value-skeleton skeleton"></span>
-        </p>
-        <div class="title-skeleton skeleton"></div>
-      </div>
-    </div>
-  </li>`;
-
-  skeletonCardElement.innerHTML = Array.from({ length: SKELETON_MOVIE_COUNT }, () => skeletonItemMarkup).join("");
+  skeletonCardElement.replaceChildren(...Array.from({ length: SKELETON_MOVIE_COUNT }, createSkeletonListItemElement));
 };
