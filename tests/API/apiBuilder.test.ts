@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createMovieApiUrl, createRequestOptions, mapFetchMoviePageDataResponse } from "../../src/API/apiBuilder";
+import type { TmdbFetchMoviePageDataResponse } from "../../src/API/api.types";
 
 describe("apiBuilder", () => {
   beforeEach(() => {
@@ -40,7 +41,7 @@ describe("apiBuilder", () => {
   });
 
   it("TMDB 응답을 Movie 페이지 데이터로 변환한다", () => {
-    const response = mapFetchMoviePageDataResponse({
+    const moviePageData: TmdbFetchMoviePageDataResponse = {
       page: 3,
       total_pages: 10,
       results: [
@@ -52,7 +53,9 @@ describe("apiBuilder", () => {
           backdrop_path: "/backdrop-1.jpg",
         },
       ],
-    });
+    };
+
+    const response = mapFetchMoviePageDataResponse(moviePageData);
 
     expect(response).toEqual({
       currentPage: 3,
@@ -70,9 +73,11 @@ describe("apiBuilder", () => {
   });
 
   it("페이지 정보가 없으면 기본값 0으로 변환한다", () => {
-    const response = mapFetchMoviePageDataResponse({
+    const moviePageData: TmdbFetchMoviePageDataResponse = {
       results: [],
-    });
+    };
+
+    const response = mapFetchMoviePageDataResponse(moviePageData);
 
     expect(response).toEqual({
       currentPage: 0,
