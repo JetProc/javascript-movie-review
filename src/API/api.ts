@@ -1,4 +1,4 @@
-import type { FetchMoviePageDataResponse } from "./api.types";
+import type { FetchMoviePageDataResponse, TmdbFetchMoviePageDataResponse } from "./api.types";
 import { createMovieApiUrl, createRequestOptions, mapFetchMoviePageDataResponse } from "./apiBuilder";
 import { API_REQUEST_TIMEOUT_MS } from "../constants/constant";
 
@@ -18,7 +18,7 @@ export const fetchMoviePageData = async (page: number, query: string = ""): Prom
       throw new Error(`영화 정보를 불러오는데 실패했습니다: ${response.status}`);
     }
 
-    const data = await response.json();
+    const data: TmdbFetchMoviePageDataResponse = await response.json();
 
     return mapFetchMoviePageDataResponse(data);
   } catch (error) {

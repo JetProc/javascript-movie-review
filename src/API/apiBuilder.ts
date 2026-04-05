@@ -1,6 +1,11 @@
 import { API_PATH, BASE_URL, DEFAULT_LANGUAGE } from "../constants/constant";
 
-import type { FetchMoviePageDataResponse, RequestOptions } from "./api.types";
+import type {
+  FetchMoviePageDataResponse,
+  RequestOptions,
+  TmdbFetchMoviePageDataResponse,
+  TmdbMovieResponse,
+} from "./api.types";
 
 import type { Movie } from "../../types/movie";
 
@@ -27,8 +32,8 @@ export const createRequestOptions = (): RequestOptions => ({
   },
 });
 
-export const mapFetchMoviePageDataResponse = (data: any): FetchMoviePageDataResponse => {
-  const movies: Movie[] = data.results.map((movie: any): Movie => {
+export const mapFetchMoviePageDataResponse = (data: TmdbFetchMoviePageDataResponse): FetchMoviePageDataResponse => {
+  const movies: Movie[] = data.results.map((movie: TmdbMovieResponse): Movie => {
     return {
       id: movie.id,
       title: movie.title,

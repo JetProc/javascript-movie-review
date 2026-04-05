@@ -13,3 +13,17 @@ export interface FetchMoviePageDataResponse {
   totalPages: number;
   results: Movie[];
 }
+
+export interface TmdbMovieResponse {
+  id: number;
+  title: string;
+  vote_average: number;
+  poster_path: string | null;
+  backdrop_path: string | null;
+}
+
+export interface TmdbFetchMoviePageDataResponse {
+  page?: number;
+  total_pages?: number;
+  results: TmdbMovieResponse[];
+}
