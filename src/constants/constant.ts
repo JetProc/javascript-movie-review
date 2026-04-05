@@ -7,6 +7,7 @@ export const BASE_URL = {
 };
 
 export const DEFAULT_LANGUAGE = "ko-KR";
+export const API_REQUEST_TIMEOUT_MS = 5000;
 
 export const SKELETON_MOVIE_COUNT = 20;
 
