@@ -1,6 +1,5 @@
 import type { AppElements } from "../types/dom";
 import { fetchMoviePageData } from "./API/api";
-import type { FetchMoviePageDataResponse } from "./API/api.types";
 import { PAGE_TITLE } from "./constants/constant";
 import type { State } from "../types/state";
 import { getAppElements } from "./utils/AppElementUtil";
@@ -12,13 +11,6 @@ const state: State = {
   totalPage: 0,
   movieList: [],
   query: "",
-};
-
-// 쿼리를 받아서 fetch 함
-const fetchMoviePages = async (query: string): Promise<FetchMoviePageDataResponse> => {
-  const response: FetchMoviePageDataResponse = await fetchMoviePageData(state.currentPage + 1, query);
-
-  return response;
 };
 
 const syncHeroSection = (elements: AppElements) => {
@@ -53,31 +45,59 @@ const updateMovieState = (newState: State) => {
   state.movieList = newState.movieList;
 };
 
-const loadMovies = async (elements: AppElements) => {
-  makeSkeleton(elements.skeletonCard);
-
-  const response = await fetchMoviePages(state.query);
-
-  updateMovieState({
-    currentPage: response.currentPage,
-    totalPage: response.totalPages,
-    movieList: [...state.movieList, ...response.results],
-    query: state.query,
-  });
-
-  if (state.currentPage === 1) {
-    elements.movieSectionTitle.innerHTML = state.query ? PAGE_TITLE.SEARCH(state.query) : PAGE_TITLE.POPULAR;
-  }
+const clearSkeleton = (elements: AppElements) => {
   elements.skeletonCard.innerHTML = "";
+};
 
-  renderMovies(state.movieList, elements.movieList);
+const syncPage = (elements: AppElements) => {
+  syncHeroSection(elements);
   syncSeeMoreButton(elements);
   syncNoResultSection(elements);
 };
 
+const loadMovies = async (elements: AppElements, query: string = state.query, shouldReset = false) => {
+  const nextPage = shouldReset ? 1 : state.currentPage + 1;
+  const previousMovieList = shouldReset ? [] : state.movieList;
+
+  makeSkeleton(elements.skeletonCard);
+
+  try {
+    const response = await fetchMoviePageData(nextPage, query);
+
+    updateMovieState({
+      currentPage: response.currentPage,
+      totalPage: response.totalPages,
+      movieList: [...previousMovieList, ...response.results],
+      query,
+    });
+
+    if (state.currentPage === 1) {
+      elements.movieSectionTitle.innerHTML = state.query ? PAGE_TITLE.SEARCH(state.query) : PAGE_TITLE.POPULAR;
+    }
+
+    renderMovies(state.movieList, elements.movieList);
+    syncPage(elements);
+  } finally {
+    clearSkeleton(elements);
+  }
+};
+
 const initializeMoviePage = async (elements: AppElements) => {
   await loadMovies(elements);
-  syncHeroSection(elements);
+};
+
+const handleAsyncError = (elements: AppElements, error: unknown) => {
+  clearSkeleton(elements);
+  syncPage(elements);
+  notifyError(error);
+};
+
+const executeWithErrorHandling = async (elements: AppElements, action: () => Promise<void>) => {
+  try {
+    await action();
+  } catch (error) {
+    handleAsyncError(elements, error);
+  }
 };
 
 const main = async () => {
@@ -85,17 +105,17 @@ const main = async () => {
 
   bindEvents(elements);
 
-  await initializeMoviePage(elements);
+  await executeWithErrorHandling(elements, () => initializeMoviePage(elements));
 };
 
 window.addEventListener("load", () => {
-  void main().catch((error) => notifyError(error));
+  void main();
 });
 
 const bindEvents = (elements: AppElements) => {
   elements.seeMoreBtn.addEventListener("click", async (event) => {
     event.preventDefault();
-    await loadMovies(elements);
+    await executeWithErrorHandling(elements, () => loadMovies(elements));
   });
 
   elements.searchForm.addEventListener("submit", async (event) => {
@@ -109,14 +129,6 @@ const bindEvents = (elements: AppElements) => {
       return;
     }
 
-    updateMovieState({
-      currentPage: 0,
-      totalPage: 0,
-      movieList: [],
-      query,
-    });
-
-    await loadMovies(elements);
-    syncHeroSection(elements);
+    await executeWithErrorHandling(elements, () => loadMovies(elements, query, true));
   });
 };
