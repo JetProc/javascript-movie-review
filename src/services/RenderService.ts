@@ -1,7 +1,7 @@
 import type { AppElements } from "../../types/dom";
 import type { Movie } from "../../types/movie";
 import { BASE_URL, IMAGE_URL, SKELETON_MOVIE_COUNT } from "../constants/constant";
-import { createImageUrl } from "./MovieService";
+import { createImageUrl, formatMovieRate } from "./MovieService";
 
 const createMovieListItemElement = (movie: Movie) => {
   const posterImageUrl = createImageUrl(BASE_URL.POSTER_BASE_URL, movie.thumbnail_path ?? "");
@@ -34,7 +34,7 @@ const createMovieListItemElement = (movie: Movie) => {
   star.alt = "";
   star.setAttribute("aria-hidden", "true");
 
-  rateValue.textContent = String(movie.rate);
+  rateValue.textContent = formatMovieRate(movie.rate);
   title.textContent = movie.title;
 
   rate.append(star, rateValue);
@@ -85,7 +85,7 @@ export const renderHeroMovie = (movie: Movie, elements: AppElements) => {
 
   elements.heroBackdrop.style.backgroundImage = posterImageUrl ? `url("${posterImageUrl}")` : "";
   elements.heroRate.hidden = false;
-  elements.heroRateValue.textContent = String(movie.rate);
+  elements.heroRateValue.textContent = formatMovieRate(movie.rate);
   elements.heroTitle.textContent = movie.title;
 };
 
