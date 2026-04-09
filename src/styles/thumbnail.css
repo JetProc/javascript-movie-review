@@ -43,6 +43,24 @@
   flex-direction: column;
   user-select: none;
   cursor: pointer;
+  outline: none;
+  transform-origin: center;
+  transition: transform 0.22s ease;
+  will-change: transform;
+}
+
+.item:focus {
+  outline: none;
+}
+
+@media (hover: hover) {
+  .item:hover {
+    transform: translateY(-6px) scale(1.02);
+  }
+}
+
+.item:focus-visible {
+  transform: translateY(-6px) scale(1.02);
 }
 
 .item-desc {
