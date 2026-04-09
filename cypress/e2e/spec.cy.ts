@@ -10,6 +10,9 @@ const EMPTY_QUERY_WARNING_TITLE = "검색어를 입력해주세요";
 const EMPTY_QUERY_WARNING_TEXT = "영화 제목을 입력한 뒤 다시 시도해주세요.";
 const ERROR_TOAST_TITLE = "오류가 발생했습니다";
 const API_ERROR_TEXT = "영화 정보를 불러오는데 실패했습니다: 500";
+const DETAIL_RELEASE_YEAR = "2024";
+const DETAIL_GENRES = ["모험", "애니메이션"];
+const DETAIL_RATE = "8.3";
 
 const createMovie = (id: number, titlePrefix: string) => ({
   id,
@@ -25,6 +28,18 @@ const createMoviePageResponse = (page: number, totalPages: number, titlePrefix: 
   results: Array.from({ length: MOVIES_PER_PAGE }, (_, index) =>
     createMovie((page - 1) * MOVIES_PER_PAGE + index + 1, titlePrefix),
   ),
+});
+
+const createMovieDetailResponse = (movieId: number, title: string) => ({
+  poster_path: `/detail-poster-${movieId}.jpg`,
+  title,
+  release_date: `${DETAIL_RELEASE_YEAR}-07-24`,
+  genres: DETAIL_GENRES.map((name, index) => ({
+    id: index + 1,
+    name,
+  })),
+  vote_average: Number(DETAIL_RATE),
+  overview: `${title} 줄거리`,
 });
 
 const mockMoviePage = ({
@@ -90,6 +105,55 @@ const mockMoviePageError = ({
         language: "ko-KR",
         page: `${page}`,
         ...(query ? { query } : {}),
+      },
+    },
+    {
+      delay: 300,
+      statusCode: 500,
+      body: {},
+    },
+  ).as(alias);
+};
+
+const mockMovieDetail = ({
+  movieId,
+  title,
+  alias,
+}: {
+  movieId: number;
+  title: string;
+  alias: string;
+}) => {
+  cy.intercept(
+    {
+      method: "GET",
+      hostname: "api.themoviedb.org",
+      pathname: `/3/movie/${movieId}`,
+      query: {
+        language: "ko-KR",
+      },
+    },
+    {
+      delay: 300,
+      body: createMovieDetailResponse(movieId, title),
+    },
+  ).as(alias);
+};
+
+const mockMovieDetailError = ({
+  movieId,
+  alias,
+}: {
+  movieId: number;
+  alias: string;
+}) => {
+  cy.intercept(
+    {
+      method: "GET",
+      hostname: "api.themoviedb.org",
+      pathname: `/3/movie/${movieId}`,
+      query: {
+        language: "ko-KR",
       },
     },
     {
@@ -179,6 +243,22 @@ const expectNoResultSection = () => {
   cy.get(".no-result-text").should("be.visible").and("have.text", "검색 결과가 없습니다.");
 };
 
+const expectMovieDetailClosed = () => {
+  cy.get("#modalBackground").should("not.have.class", "active");
+  cy.get("body").should("not.have.class", "modal-open");
+};
+
+const expectMovieDetailModal = (movieId: number, title: string) => {
+  cy.get("#modalBackground").should("have.class", "active");
+  cy.get("body").should("have.class", "modal-open");
+  cy.get("#modalPosterImage").should("have.attr", "src").and("include", `detail-poster-${movieId}.jpg`);
+  cy.get("#modalTitle").should("have.text", title);
+  cy.get("#modalCategory").should("have.text", `${DETAIL_RELEASE_YEAR} · ${DETAIL_GENRES.join(", ")}`);
+  cy.get("#modalRateIcon").should("have.attr", "src").and("include", "star_filled.png");
+  cy.get("#modalRateValue").should("have.text", DETAIL_RATE);
+  cy.get("#modalDetail").should("have.text", `${title} 줄거리`);
+};
+
 describe("메인 화면", () => {
   beforeEach(() => {
     Array.from({ length: TOTAL_POPULAR_PAGES }, (_, index) => index + 1).forEach((page) => mockPopularMoviePage(page));
@@ -221,6 +301,67 @@ describe("메인 화면", () => {
     cy.get("#hero-section").should("be.visible");
     cy.get(".no-result").should("not.be.visible");
     cy.get("#see-more-btn").should("be.visible");
+  });
+
+  it("썸네일 클릭으로 영화 상세 모달을 열고 닫을 수 있다", () => {
+    mockMovieDetail({
+      movieId: 1,
+      title: "인기 영화 1",
+      alias: "getMovieDetail1",
+    });
+    mockMovieDetail({
+      movieId: 2,
+      title: "인기 영화 2",
+      alias: "getMovieDetail2",
+    });
+
+    cy.visit(APP_URL);
+    cy.wait("@getPopularMoviesPage1");
+
+    cy.contains(".thumbnail-list .item", "인기 영화 1").click();
+    cy.wait("@getMovieDetail1");
+    expectMovieDetailModal(1, "인기 영화 1");
+
+    cy.get("#closeModal").click();
+    expectMovieDetailClosed();
+
+    cy.contains(".thumbnail-list .item", "인기 영화 2").click();
+    cy.wait("@getMovieDetail2");
+    expectMovieDetailModal(2, "인기 영화 2");
+
+    cy.get("#modalBackground").click("topLeft");
+    expectMovieDetailClosed();
+  });
+
+  it("hero의 자세히 보기 버튼으로 첫 번째 영화 상세 모달을 연다", () => {
+    mockMovieDetail({
+      movieId: 1,
+      title: "인기 영화 1",
+      alias: "getHeroMovieDetail1",
+    });
+
+    cy.visit(APP_URL);
+    cy.wait("@getPopularMoviesPage1");
+
+    cy.get(".hero-detail-button").click();
+    cy.wait("@getHeroMovieDetail1");
+    expectMovieDetailModal(1, "인기 영화 1");
+  });
+
+  it("영화 상세 요청이 실패하면 에러 토스트를 띄우고 모달을 열지 않는다", () => {
+    mockMovieDetailError({
+      movieId: 1,
+      alias: "getMovieDetail1Error",
+    });
+
+    cy.visit(APP_URL);
+    cy.wait("@getPopularMoviesPage1");
+
+    cy.contains(".thumbnail-list .item", "인기 영화 1").click();
+    cy.wait("@getMovieDetail1Error");
+
+    expectErrorToast(API_ERROR_TEXT);
+    expectMovieDetailClosed();
   });
 });
 
