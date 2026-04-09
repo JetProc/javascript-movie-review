@@ -16,6 +16,10 @@ const createMovieListItemElement = (movie: Movie) => {
   const title = document.createElement("strong");
 
   item.className = "item";
+  item.dataset.movieId = String(movie.id);
+  item.tabIndex = 0;
+  item.setAttribute("role", "button");
+  item.setAttribute("aria-label", `${movie.title} 상세 보기`);
 
   thumbnail.className = "thumbnail";
   thumbnail.src = posterImageUrl;

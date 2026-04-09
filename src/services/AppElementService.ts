@@ -14,7 +14,18 @@ export const getAppElements = (): AppElements => ({
   heroRate: $<HTMLDivElement>("#hero-rate"),
   heroRateValue: $<HTMLSpanElement>("#hero-rate-value"),
   heroTitle: $<HTMLHeadingElement>("#hero-title"),
+  heroDetailButton: $<HTMLButtonElement>(".hero-detail-button"),
 
   skeletonCard: $<HTMLUListElement>(".skeleton-card"),
   seeMoreBtn: $<HTMLButtonElement>("#see-more-btn"),
+
+  modalBackground: $<HTMLDivElement>("#modalBackground"),
+  closeModal: $<HTMLButtonElement>("#closeModal"),
+  modalCloseIcon: $<HTMLImageElement>("#modalCloseIcon"),
+  modalPosterImage: $<HTMLImageElement>("#modalPosterImage"),
+  modalTitle: $<HTMLHeadingElement>("#modalTitle"),
+  modalCategory: $<HTMLParagraphElement>("#modalCategory"),
+  modalRateIcon: $<HTMLImageElement>("#modalRateIcon"),
+  modalRateValue: $<HTMLSpanElement>("#modalRateValue"),
+  modalDetail: $<HTMLParagraphElement>("#modalDetail"),
 });
