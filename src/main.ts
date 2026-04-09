@@ -1,7 +1,8 @@
 import type { AppElements } from "../types/dom";
-import { fetchMoviePageData } from "./API/api";
+import { fetchMovieDetail, fetchMoviePageData } from "./API/api";
 import { PAGE_TITLE } from "./constants/constant";
 import { getAppElements } from "./services/AppElementService";
+import { closeMovieDetailModal, initializeMovieDetailModal, openMovieDetailModal, renderMovieDetail } from "./services/MovieDetailModalService";
 import { notifyEmptyQuery, notifyError } from "./services/NotifyService";
 import { makeSkeleton, renderHeroMovie, renderMovies } from "./services/RenderService";
 import type { State } from "../types/state";
@@ -100,9 +101,39 @@ const executeWithErrorHandling = async (elements: AppElements, action: () => Pro
   }
 };
 
+const getMovieIdFromTarget = (target: EventTarget | null) => {
+  if (!(target instanceof Element)) {
+    return null;
+  }
+
+  const movieItem = target.closest<HTMLElement>(".item[data-movie-id]");
+  const movieId = movieItem?.dataset.movieId;
+
+  if (!movieId) {
+    return null;
+  }
+
+  const parsedMovieId = Number(movieId);
+
+  return Number.isNaN(parsedMovieId) ? null : parsedMovieId;
+};
+
+const openMovieDetailById = async (elements: AppElements, movieId: number) => {
+  try {
+    const movieDetail = await fetchMovieDetail(movieId);
+
+    renderMovieDetail(movieDetail, elements);
+    openMovieDetailModal(elements);
+  } catch (error) {
+    closeMovieDetailModal(elements);
+    notifyError(error);
+  }
+};
+
 const main = async () => {
   const elements = getAppElements();
 
+  initializeMovieDetailModal(elements);
   bindEvents(elements);
 
   await executeWithErrorHandling(elements, () => initializeMoviePage(elements));
@@ -118,6 +149,31 @@ const bindEvents = (elements: AppElements) => {
     await executeWithErrorHandling(elements, () => loadMovies(elements));
   });
 
+  elements.movieList.addEventListener("click", async (event) => {
+    const movieId = getMovieIdFromTarget(event.target);
+
+    if (!movieId) {
+      return;
+    }
+
+    await openMovieDetailById(elements, movieId);
+  });
+
+  elements.movieList.addEventListener("keydown", async (event) => {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+
+    const movieId = getMovieIdFromTarget(event.target);
+
+    if (!movieId) {
+      return;
+    }
+
+    event.preventDefault();
+    await openMovieDetailById(elements, movieId);
+  });
+
   elements.searchForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
@@ -130,5 +186,29 @@ const bindEvents = (elements: AppElements) => {
     }
 
     await executeWithErrorHandling(elements, () => loadMovies(elements, query, true));
+  });
+
+  elements.heroDetailButton.addEventListener("click", async (event) => {
+    event.preventDefault();
+
+    const heroMovie = state.movieList[0];
+
+    if (!heroMovie) {
+      return;
+    }
+
+    await openMovieDetailById(elements, heroMovie.id);
+  });
+
+  elements.closeModal.addEventListener("click", () => {
+    closeMovieDetailModal(elements);
+  });
+
+  elements.modalBackground.addEventListener("click", (event) => {
+    if (event.target !== elements.modalBackground) {
+      return;
+    }
+
+    closeMovieDetailModal(elements);
   });
 };
