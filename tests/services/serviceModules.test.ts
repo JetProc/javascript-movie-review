@@ -8,6 +8,7 @@ import {
   initializeMovieDetailModal,
   openMovieDetailModal,
   renderMovieDetail,
+  renderMovieUserRating,
   syncMovieDetailModalClosedState,
 } from "../../src/services/MovieDetailModalService";
 import { createImageUrl, formatMovieRate } from "../../src/services/MovieService";
@@ -26,6 +27,22 @@ vi.mock("simple-notify/dist/simple-notify.css", () => ({}));
 import { notifyEmptyQuery, notifyError } from "../../src/services/NotifyService";
 
 const createStubElement = <T extends Element>(name: string) => ({ name }) as unknown as T;
+
+const createMockRatingButton = () => {
+  const image = {
+    src: "",
+  };
+
+  return {
+    attributes: {} as Record<string, string>,
+    querySelector: vi.fn(() => image),
+    setAttribute(name: string, value: string) {
+      this.attributes[name] = value;
+    },
+    image,
+  };
+};
+
 const createMockElement = <T extends HTMLElement>(tagName: string) => {
   const mockElement = {
     tagName,
@@ -62,6 +79,7 @@ describe("service-like modules", () => {
   });
 
   it("앱에서 사용하는 주요 DOM 요소를 조회한다", () => {
+    const ratingButtons = [createStubElement<HTMLButtonElement>("ratingButton1"), createStubElement<HTMLButtonElement>("ratingButton2")];
     const elementBySelector = new Map<string, Element>([
       [".thumbnail-list", createStubElement<HTMLUListElement>("movieList")],
       [".site-header", createStubElement<HTMLElement>("siteHeader")],
@@ -85,22 +103,33 @@ describe("service-like modules", () => {
       ["#modalCategory", createStubElement<HTMLParagraphElement>("modalCategory")],
       ["#modalRateIcon", createStubElement<HTMLImageElement>("modalRateIcon")],
       ["#modalRateValue", createStubElement<HTMLSpanElement>("modalRateValue")],
+      ["#myRatingMessage", createStubElement<HTMLSpanElement>("myRatingMessage")],
+      ["#myRatingScore", createStubElement<HTMLSpanElement>("myRatingScore")],
       ["#modalDetail", createStubElement<HTMLParagraphElement>("modalDetail")],
     ]);
 
     const querySelector = vi.fn((selector: string) => elementBySelector.get(selector) ?? null);
+    const querySelectorAll = vi.fn((selector: string) => {
+      if (selector === ".my-rating-star-button") {
+        return ratingButtons;
+      }
 
-    vi.stubGlobal("document", {
-      querySelector,
-    } as Pick<Document, "querySelector">);
+      return [];
+    });
+
+    vi.stubGlobal(
+      "document",
+      {
+        querySelector,
+        querySelectorAll,
+      } as Pick<Document, "querySelector" | "querySelectorAll">,
+    );
 
     const elements = getAppElements();
 
     expect(querySelector).toHaveBeenCalledWith(".thumbnail-list");
-    expect(querySelector).toHaveBeenCalledWith("#search-form");
-    expect(querySelector).toHaveBeenCalledWith("#hero-backdrop");
-    expect(querySelector).toHaveBeenCalledWith("#see-more-btn");
     expect(querySelector).toHaveBeenCalledWith("#modalBackground");
+    expect(querySelectorAll).toHaveBeenCalledWith(".my-rating-star-button");
     expect(elements).toMatchObject({
       movieList: elementBySelector.get(".thumbnail-list"),
       siteHeader: elementBySelector.get(".site-header"),
@@ -124,8 +153,11 @@ describe("service-like modules", () => {
       modalCategory: elementBySelector.get("#modalCategory"),
       modalRateIcon: elementBySelector.get("#modalRateIcon"),
       modalRateValue: elementBySelector.get("#modalRateValue"),
+      myRatingMessage: elementBySelector.get("#myRatingMessage"),
+      myRatingScore: elementBySelector.get("#myRatingScore"),
       modalDetail: elementBySelector.get("#modalDetail"),
     });
+    expect(elements.myRatingButtons).toEqual(ratingButtons);
   });
 
   it("이미지 경로가 있으면 baseUrl과 합쳐서 반환한다", () => {
@@ -144,15 +176,18 @@ describe("service-like modules", () => {
   it("영화 목록 카드의 평점을 공용 포맷으로 렌더링한다", () => {
     const createdElements: Array<ReturnType<typeof createMockElement<HTMLElement>>> = [];
 
-    vi.stubGlobal("document", {
-      createElement: vi.fn((tagName: string) => {
-        const element = createMockElement<HTMLElement>(tagName);
+    vi.stubGlobal(
+      "document",
+      {
+        createElement: vi.fn((tagName: string) => {
+          const element = createMockElement<HTMLElement>(tagName);
 
-        createdElements.push(element);
+          createdElements.push(element);
 
-        return element;
-      }),
-    } as unknown as Pick<Document, "createElement">);
+          return element;
+        }),
+      } as unknown as Pick<Document, "createElement">,
+    );
 
     const movieListElement = createMockElement<HTMLUListElement>("ul");
 
@@ -164,6 +199,7 @@ describe("service-like modules", () => {
           rate: 7.76,
           thumbnail_path: "/poster.jpg",
           hero_path: "/backdrop.jpg",
+          userRating: null,
         },
       ],
       movieListElement,
@@ -206,6 +242,7 @@ describe("service-like modules", () => {
         rate: 7.76,
         thumbnail_path: "/poster.jpg",
         hero_path: "/backdrop.jpg",
+        userRating: null,
       },
       elements as never,
     );
@@ -220,6 +257,7 @@ describe("service-like modules", () => {
     const modalBackgroundClassToggle = vi.fn();
     const modalBackgroundSetAttribute = vi.fn();
     const bodyClassToggle = vi.fn();
+    const ratingButtons = Array.from({ length: 5 }, () => createMockRatingButton());
     const dialog = {
       open: false,
       classList: {
@@ -234,13 +272,16 @@ describe("service-like modules", () => {
       }),
     };
 
-    vi.stubGlobal("document", {
-      body: {
-        classList: {
-          toggle: bodyClassToggle,
+    vi.stubGlobal(
+      "document",
+      {
+        body: {
+          classList: {
+            toggle: bodyClassToggle,
+          },
         },
-      },
-    } as unknown as Pick<Document, "body">);
+      } as unknown as Pick<Document, "body">,
+    );
 
     const elements = {
       modalBackground: dialog,
@@ -264,6 +305,13 @@ describe("service-like modules", () => {
       modalRateValue: {
         textContent: "",
       },
+      myRatingMessage: {
+        textContent: "",
+      },
+      myRatingScore: {
+        textContent: "",
+      },
+      myRatingButtons: ratingButtons,
       modalDetail: {
         textContent: "",
       },
@@ -279,6 +327,8 @@ describe("service-like modules", () => {
     expect(elements.modalCategory.textContent).toBe("");
     expect(elements.modalCategory.hidden).toBe(true);
     expect(elements.modalRateValue.textContent).toBe("");
+    expect(elements.myRatingMessage.textContent).toBe("별점을 남겨보세요");
+    expect(elements.myRatingScore.textContent).toBe("(0/10)");
     expect(elements.modalDetail.textContent).toBe("");
     expect(modalBackgroundClassToggle).toHaveBeenCalledWith("active", false);
     expect(modalBackgroundSetAttribute).toHaveBeenCalledWith("aria-hidden", "true");
@@ -293,6 +343,7 @@ describe("service-like modules", () => {
         genres: ["모험", "애니메이션"],
         rate: 7.76,
         overview: "새로운 감정들이 등장하며 벌어지는 이야기",
+        userRating: 8,
       },
       elements as never,
     );
@@ -305,6 +356,11 @@ describe("service-like modules", () => {
     expect(elements.modalCategory.textContent).toBe("2024 · 모험, 애니메이션");
     expect(elements.modalRateIcon.src).toBe(IMAGE_URL.FILLED_STAR_IMAGE_URL);
     expect(elements.modalRateValue.textContent).toBe("7.8");
+    expect(elements.myRatingMessage.textContent).toBe("재미있어요");
+    expect(elements.myRatingScore.textContent).toBe("(8/10)");
+    expect(ratingButtons[0].image.src).toBe(IMAGE_URL.FILLED_STAR_IMAGE_URL);
+    expect(ratingButtons[3].image.src).toBe(IMAGE_URL.FILLED_STAR_IMAGE_URL);
+    expect(ratingButtons[4].image.src).toBe(IMAGE_URL.STAR_IMAGE_URL);
     expect(elements.modalDetail.textContent).toBe("새로운 감정들이 등장하며 벌어지는 이야기");
     expect(modalBackgroundClassToggle).toHaveBeenCalledWith("active", true);
     expect(modalBackgroundSetAttribute).toHaveBeenCalledWith("aria-hidden", "false");
@@ -318,6 +374,8 @@ describe("service-like modules", () => {
     expect(elements.modalCategory.textContent).toBe("");
     expect(elements.modalCategory.hidden).toBe(true);
     expect(elements.modalRateValue.textContent).toBe("");
+    expect(elements.myRatingMessage.textContent).toBe("별점을 남겨보세요");
+    expect(elements.myRatingScore.textContent).toBe("(0/10)");
     expect(elements.modalDetail.textContent).toBe("");
 
     closeMovieDetailModal(elements as never);
@@ -331,6 +389,25 @@ describe("service-like modules", () => {
 
     expect(modalBackgroundClassToggle).toHaveBeenLastCalledWith("active", false);
     expect(modalBackgroundSetAttribute).toHaveBeenLastCalledWith("aria-hidden", "true");
+  });
+
+  it("사용자 별점 렌더링이 문구와 별 아이콘을 실시간으로 갱신한다", () => {
+    const ratingButtons = Array.from({ length: 5 }, () => createMockRatingButton());
+    const elements = {
+      myRatingMessage: {
+        textContent: "",
+      },
+      myRatingScore: {
+        textContent: "",
+      },
+      myRatingButtons: ratingButtons,
+    };
+
+    renderMovieUserRating(10, elements as never);
+
+    expect(elements.myRatingMessage.textContent).toBe("명작이에요");
+    expect(elements.myRatingScore.textContent).toBe("(10/10)");
+    expect(ratingButtons.every((button) => button.image.src === IMAGE_URL.FILLED_STAR_IMAGE_URL)).toBe(true);
   });
 
   it("오류 알림을 표시한다", () => {

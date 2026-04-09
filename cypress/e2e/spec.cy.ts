@@ -14,6 +14,10 @@ const DETAIL_RELEASE_YEAR = "2024";
 const DETAIL_GENRES = ["모험", "애니메이션"];
 const DETAIL_RATE = "8.4";
 const MOVIE_RATE = "7.6";
+const EMPTY_MY_RATING_LABEL = "별점을 남겨보세요";
+const EMPTY_MY_RATING_SCORE = "(0/10)";
+const SAVED_MY_RATING_LABEL = "재미있어요";
+const SAVED_MY_RATING_SCORE = "(8/10)";
 
 const createMovie = (id: number, titlePrefix: string) => ({
   id,
@@ -264,6 +268,7 @@ const expectMovieDetailModal = (movieId: number, title: string) => {
 
 describe("메인 화면", () => {
   beforeEach(() => {
+    cy.clearLocalStorage();
     Array.from({ length: TOTAL_POPULAR_PAGES }, (_, index) => index + 1).forEach((page) => mockPopularMoviePage(page));
   });
 
@@ -413,10 +418,43 @@ describe("메인 화면", () => {
     cy.wait("@getMovieDetailRace2");
     expectMovieDetailModal(2, "인기 영화 2");
   });
+
+  it("내 별점을 저장하고 새로고침 후에도 유지한다", () => {
+    mockMovieDetail({
+      movieId: 1,
+      title: "인기 영화 1",
+      alias: "getMovieDetailWithUserRating",
+    });
+
+    cy.visit(APP_URL);
+    cy.wait("@getPopularMoviesPage1");
+
+    cy.contains(".thumbnail-list .item", "인기 영화 1").click();
+    cy.wait("@getMovieDetailWithUserRating");
+    expectMovieDetailModal(1, "인기 영화 1");
+    cy.get("#myRatingMessage").should("have.text", EMPTY_MY_RATING_LABEL);
+    cy.get("#myRatingScore").should("have.text", EMPTY_MY_RATING_SCORE);
+
+    cy.get('.my-rating-star-button[data-user-rating="8"]').click();
+    cy.get("#myRatingMessage").should("have.text", SAVED_MY_RATING_LABEL);
+    cy.get("#myRatingScore").should("have.text", SAVED_MY_RATING_SCORE);
+    cy.get(".my-rating-star-button img").eq(0).should("have.attr", "src").and("include", "star_filled.png");
+    cy.get(".my-rating-star-button img").eq(3).should("have.attr", "src").and("include", "star_filled.png");
+    cy.get(".my-rating-star-button img").eq(4).should("have.attr", "src").and("include", "star_empty.png");
+
+    cy.reload();
+    cy.wait("@getPopularMoviesPage1");
+    cy.contains(".thumbnail-list .item", "인기 영화 1").click();
+    cy.wait("@getMovieDetailWithUserRating");
+
+    cy.get("#myRatingMessage").should("have.text", SAVED_MY_RATING_LABEL);
+    cy.get("#myRatingScore").should("have.text", SAVED_MY_RATING_SCORE);
+  });
 });
 
 describe("검색 화면", () => {
   beforeEach(() => {
+    cy.clearLocalStorage();
     Array.from({ length: TOTAL_POPULAR_PAGES }, (_, index) => index + 1).forEach((page) => mockPopularMoviePage(page));
     Array.from({ length: TOTAL_SEARCH_PAGES }, (_, index) => index + 1).forEach((page) => mockSearchMoviePage(page));
   });

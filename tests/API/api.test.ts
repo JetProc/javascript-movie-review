@@ -71,6 +71,7 @@ describe("fetchMoviePageData", () => {
           rate: 7.4,
           thumbnail_path: "/poster-1.jpg",
           hero_path: "/backdrop-1.jpg",
+          userRating: null,
         },
       ],
     });
@@ -174,6 +175,7 @@ describe("fetchMovieDetail", () => {
       genres: ["모험", "판타지"],
       rate: 8,
       overview: "시리우스 블랙이 탈옥하면서 벌어지는 이야기",
+      userRating: null,
     });
   });
 
