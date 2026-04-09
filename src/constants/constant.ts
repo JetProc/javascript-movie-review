@@ -12,7 +12,16 @@ export const API_REQUEST_TIMEOUT_MS = 5000;
 
 export const SKELETON_MOVIE_COUNT = 20;
 export const MOVIE_USER_RATING_STORAGE_KEY = "movie-user-ratings";
-export const MOVIE_USER_RATING_OPTIONS = [2, 4, 6, 8, 10] as const;
+export const MOVIE_USER_RATING_LABELS = {
+  2: "최악이예요",
+  4: "별로예요",
+  6: "보통이에요",
+  8: "재미있어요",
+  10: "명작이에요",
+} as const;
+export const MOVIE_USER_RATING_OPTIONS = Object.keys(MOVIE_USER_RATING_LABELS).map((key) => Number(key)) as Array<
+  keyof typeof MOVIE_USER_RATING_LABELS
+>;
 
 export const IMAGE_URL = {
   STAR_IMAGE_URL: `${PUBLIC_IMAGE_BASE_URL}star_empty.png`,
