@@ -12,12 +12,13 @@ const ERROR_TOAST_TITLE = "오류가 발생했습니다";
 const API_ERROR_TEXT = "영화 정보를 불러오는데 실패했습니다: 500";
 const DETAIL_RELEASE_YEAR = "2024";
 const DETAIL_GENRES = ["모험", "애니메이션"];
-const DETAIL_RATE = "8.3";
+const DETAIL_RATE = "8.4";
+const MOVIE_RATE = "7.6";
 
 const createMovie = (id: number, titlePrefix: string) => ({
   id,
   title: `${titlePrefix} ${id}`,
-  vote_average: 7.5,
+  vote_average: 7.56,
   poster_path: `/poster-${id}.jpg`,
   backdrop_path: `/backdrop-${id}.jpg`,
 });
@@ -38,7 +39,7 @@ const createMovieDetailResponse = (movieId: number, title: string) => ({
     id: index + 1,
     name,
   })),
-  vote_average: Number(DETAIL_RATE),
+  vote_average: 8.35,
   overview: `${title} 줄거리`,
 });
 
@@ -119,10 +120,12 @@ const mockMovieDetail = ({
   movieId,
   title,
   alias,
+  delay = 300,
 }: {
   movieId: number;
   title: string;
   alias: string;
+  delay?: number;
 }) => {
   cy.intercept(
     {
@@ -134,7 +137,7 @@ const mockMovieDetail = ({
       },
     },
     {
-      delay: 300,
+      delay,
       body: createMovieDetailResponse(movieId, title),
     },
   ).as(alias);
@@ -244,12 +247,12 @@ const expectNoResultSection = () => {
 };
 
 const expectMovieDetailClosed = () => {
-  cy.get("#modalBackground").should("not.have.class", "active");
+  cy.get("#modalBackground").should("not.have.attr", "open");
   cy.get("body").should("not.have.class", "modal-open");
 };
 
 const expectMovieDetailModal = (movieId: number, title: string) => {
-  cy.get("#modalBackground").should("have.class", "active");
+  cy.get("#modalBackground").should("have.attr", "open");
   cy.get("body").should("have.class", "modal-open");
   cy.get("#modalPosterImage").should("have.attr", "src").and("include", `detail-poster-${movieId}.jpg`);
   cy.get("#modalTitle").should("have.text", title);
@@ -270,6 +273,8 @@ describe("메인 화면", () => {
     expectSkeletonUi();
     cy.wait("@getPopularMoviesPage1");
     expectMovieList(1, "인기 영화");
+    cy.get("#hero-rate-value").should("have.text", MOVIE_RATE);
+    cy.get(".thumbnail-list .rate span").first().should("have.text", MOVIE_RATE);
 
     clickSeeMoreAndVerify(2, "getPopularMoviesPage2", "인기 영화");
     clickSeeMoreAndVerify(3, "getPopularMoviesPage3", "인기 영화");
@@ -333,6 +338,24 @@ describe("메인 화면", () => {
     expectMovieDetailClosed();
   });
 
+  it("ESC 키로 영화 상세 모달을 닫을 수 있다", () => {
+    mockMovieDetail({
+      movieId: 1,
+      title: "인기 영화 1",
+      alias: "getMovieDetailEsc",
+    });
+
+    cy.visit(APP_URL);
+    cy.wait("@getPopularMoviesPage1");
+
+    cy.contains(".thumbnail-list .item", "인기 영화 1").click();
+    cy.wait("@getMovieDetailEsc");
+    expectMovieDetailModal(1, "인기 영화 1");
+
+    cy.focused().type("{esc}");
+    expectMovieDetailClosed();
+  });
+
   it("hero의 자세히 보기 버튼으로 첫 번째 영화 상세 모달을 연다", () => {
     mockMovieDetail({
       movieId: 1,
@@ -362,6 +385,33 @@ describe("메인 화면", () => {
 
     expectErrorToast(API_ERROR_TEXT);
     expectMovieDetailClosed();
+  });
+
+  it("영화 상세를 연속으로 클릭하면 마지막으로 클릭한 영화만 표시한다", () => {
+    mockMovieDetail({
+      movieId: 1,
+      title: "인기 영화 1",
+      alias: "getMovieDetailRace1",
+      delay: 200,
+    });
+    mockMovieDetail({
+      movieId: 2,
+      title: "인기 영화 2",
+      alias: "getMovieDetailRace2",
+      delay: 500,
+    });
+
+    cy.visit(APP_URL);
+    cy.wait("@getPopularMoviesPage1");
+
+    cy.contains(".thumbnail-list .item", "인기 영화 1").click();
+    cy.contains(".thumbnail-list .item", "인기 영화 2").click();
+
+    cy.wait("@getMovieDetailRace1");
+    expectMovieDetailClosed();
+
+    cy.wait("@getMovieDetailRace2");
+    expectMovieDetailModal(2, "인기 영화 2");
   });
 });
 
