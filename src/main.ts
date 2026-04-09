@@ -126,6 +126,26 @@ const getMovieIdFromTarget = (target: EventTarget | null) => {
   return Number.isNaN(parsedMovieId) ? null : parsedMovieId;
 };
 
+const blurActiveElement = () => {
+  if (!(document.activeElement instanceof HTMLElement)) {
+    return;
+  }
+
+  document.activeElement.blur();
+};
+
+const clearMovieDetailTriggerFocus = () => {
+  if (typeof requestAnimationFrame === "function") {
+    requestAnimationFrame(() => {
+      blurActiveElement();
+    });
+
+    return;
+  }
+
+  blurActiveElement();
+};
+
 const openMovieDetailById = async (elements: AppElements, movieId: number) => {
   const requestId = ++latestMovieDetailRequestId;
 
@@ -234,5 +254,6 @@ const bindEvents = (elements: AppElements) => {
 
   elements.modalBackground.addEventListener("close", () => {
     syncMovieDetailModalClosedState(elements);
+    clearMovieDetailTriggerFocus();
   });
 };
