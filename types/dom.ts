@@ -16,7 +16,7 @@ export interface AppElements {
   skeletonCard: HTMLUListElement;
   seeMoreBtn: HTMLButtonElement;
 
-  modalBackground: HTMLDivElement;
+  modalBackground: HTMLDialogElement;
   closeModal: HTMLButtonElement;
   modalCloseIcon: HTMLImageElement;
   modalPosterImage: HTMLImageElement;

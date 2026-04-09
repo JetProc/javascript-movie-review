@@ -2,7 +2,14 @@ import type { AppElements } from "../types/dom";
 import { fetchMovieDetail, fetchMoviePageData } from "./API/api";
 import { PAGE_TITLE } from "./constants/constant";
 import { getAppElements } from "./services/AppElementService";
-import { closeMovieDetailModal, initializeMovieDetailModal, openMovieDetailModal, renderMovieDetail } from "./services/MovieDetailModalService";
+import {
+  clearMovieDetailModal,
+  closeMovieDetailModal,
+  initializeMovieDetailModal,
+  openMovieDetailModal,
+  renderMovieDetail,
+  syncMovieDetailModalClosedState,
+} from "./services/MovieDetailModalService";
 import { notifyEmptyQuery, notifyError } from "./services/NotifyService";
 import { makeSkeleton, renderHeroMovie, renderMovies } from "./services/RenderService";
 import type { State } from "../types/state";
@@ -13,6 +20,7 @@ const state: State = {
   movieList: [],
   query: "",
 };
+let latestMovieDetailRequestId = 0;
 
 const syncHeroSection = (elements: AppElements) => {
   const shouldShowHero = state.query === "" && state.movieList.length > 0;
@@ -119,12 +127,24 @@ const getMovieIdFromTarget = (target: EventTarget | null) => {
 };
 
 const openMovieDetailById = async (elements: AppElements, movieId: number) => {
+  const requestId = ++latestMovieDetailRequestId;
+
+  clearMovieDetailModal(elements);
+
   try {
     const movieDetail = await fetchMovieDetail(movieId);
+
+    if (requestId !== latestMovieDetailRequestId) {
+      return;
+    }
 
     renderMovieDetail(movieDetail, elements);
     openMovieDetailModal(elements);
   } catch (error) {
+    if (requestId !== latestMovieDetailRequestId) {
+      return;
+    }
+
     closeMovieDetailModal(elements);
     notifyError(error);
   }
@@ -210,5 +230,9 @@ const bindEvents = (elements: AppElements) => {
     }
 
     closeMovieDetailModal(elements);
+  });
+
+  elements.modalBackground.addEventListener("close", () => {
+    syncMovieDetailModalClosedState(elements);
   });
 };
