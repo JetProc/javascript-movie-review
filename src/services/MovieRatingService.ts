@@ -1,13 +1,5 @@
-import { MOVIE_USER_RATING_OPTIONS } from "../constants/constant";
+import { MOVIE_USER_RATING_LABELS, MOVIE_USER_RATING_OPTIONS } from "../constants/constant";
 import type { Movie, MovieDetail, MovieUserRating } from "../../types/movie";
-
-const MOVIE_USER_RATING_LABELS: Record<MovieUserRating, string> = {
-  2: "최악이예요",
-  4: "별로예요",
-  6: "보통이에요",
-  8: "재미있어요",
-  10: "명작이에요",
-};
 
 const DEFAULT_MOVIE_USER_RATING_LABEL = "별점을 남겨보세요";
 

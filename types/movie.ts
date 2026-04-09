@@ -1,4 +1,6 @@
-export type MovieUserRating = 2 | 4 | 6 | 8 | 10;
+import type { MOVIE_USER_RATING_LABELS } from "../src/constants/constant";
+
+export type MovieUserRating = keyof typeof MOVIE_USER_RATING_LABELS;
 
 export interface Movie {
   id: number;
