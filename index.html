@@ -71,7 +71,6 @@
     <dialog class="modal-background" id="modalBackground" aria-labelledby="modalTitle" aria-describedby="modalDetail">
       <article class="modal">
         <div class="modal-header">
-          <p class="modal-shortcut-hint"><kbd>Esc</kbd>로 닫기</p>
           <button class="close-modal" id="closeModal" type="button" aria-label="상세 정보 닫기">
             <img id="modalCloseIcon" alt="" aria-hidden="true" />
           </button>
@@ -84,6 +83,7 @@
             <h2 id="modalTitle"></h2>
             <p class="category" id="modalCategory"></p>
             <p class="rate">
+              <span class="modal-rate-label">평균</span>
               <img id="modalRateIcon" class="star" alt="" aria-hidden="true" />
               <span id="modalRateValue"></span>
             </p>
