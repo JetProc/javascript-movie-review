@@ -1,6 +1,7 @@
 import type { AppElements } from "../../types/dom";
-import type { MovieDetail } from "../../types/movie";
-import { BASE_URL, IMAGE_URL } from "../constants/constant";
+import type { MovieDetail, MovieUserRating } from "../../types/movie";
+import { BASE_URL, IMAGE_URL, MOVIE_USER_RATING_OPTIONS } from "../constants/constant";
+import { formatMovieUserRatingScore, getMovieUserRatingLabel } from "./MovieRatingService";
 import { createImageUrl, formatMovieRate } from "./MovieService";
 
 const createMovieCategoryText = ({ release_year, genres }: MovieDetail) => {
@@ -21,6 +22,7 @@ export const clearMovieDetailModal = (elements: AppElements) => {
   elements.modalCategory.hidden = true;
   elements.modalRateIcon.src = IMAGE_URL.FILLED_STAR_IMAGE_URL;
   elements.modalRateValue.textContent = "";
+  renderMovieUserRating(null, elements);
   elements.modalDetail.textContent = "";
 };
 
@@ -46,7 +48,25 @@ export const renderMovieDetail = (movieDetail: MovieDetail, elements: AppElement
   elements.modalCategory.hidden = elements.modalCategory.textContent.length === 0;
   elements.modalRateIcon.src = IMAGE_URL.FILLED_STAR_IMAGE_URL;
   elements.modalRateValue.textContent = formatMovieRate(movieDetail.rate);
+  renderMovieUserRating(movieDetail.userRating, elements);
   elements.modalDetail.textContent = movieDetail.overview;
+};
+
+export const renderMovieUserRating = (userRating: MovieUserRating | null, elements: AppElements) => {
+  elements.myRatingMessage.textContent = getMovieUserRatingLabel(userRating);
+  elements.myRatingScore.textContent = formatMovieUserRatingScore(userRating);
+
+  elements.myRatingButtons.forEach((button, index) => {
+    const starImage = button.querySelector("img");
+    const thresholdRating = MOVIE_USER_RATING_OPTIONS[index];
+    const isFilledStar = userRating !== null && thresholdRating <= userRating;
+
+    button.setAttribute("aria-pressed", String(isFilledStar));
+
+    if (starImage) {
+      starImage.src = isFilledStar ? IMAGE_URL.FILLED_STAR_IMAGE_URL : IMAGE_URL.STAR_IMAGE_URL;
+    }
+  });
 };
 
 export const openMovieDetailModal = (elements: AppElements) => {

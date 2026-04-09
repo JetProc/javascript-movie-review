@@ -1,5 +1,5 @@
 import type { AppElements } from "../../types/dom";
-import { $ } from "../utils/util";
+import { $, $$ } from "../utils/util";
 
 export const getAppElements = (): AppElements => ({
   movieList: $<HTMLUListElement>(".thumbnail-list"),
@@ -27,5 +27,8 @@ export const getAppElements = (): AppElements => ({
   modalCategory: $<HTMLParagraphElement>("#modalCategory"),
   modalRateIcon: $<HTMLImageElement>("#modalRateIcon"),
   modalRateValue: $<HTMLSpanElement>("#modalRateValue"),
+  myRatingMessage: $<HTMLSpanElement>("#myRatingMessage"),
+  myRatingScore: $<HTMLSpanElement>("#myRatingScore"),
+  myRatingButtons: $$<HTMLButtonElement>(".my-rating-star-button"),
   modalDetail: $<HTMLParagraphElement>("#modalDetail"),
 });
