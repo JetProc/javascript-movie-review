@@ -19,7 +19,7 @@ export const getAppElements = (): AppElements => ({
   skeletonCard: $<HTMLUListElement>(".skeleton-card"),
   seeMoreBtn: $<HTMLButtonElement>("#see-more-btn"),
 
-  modalBackground: $<HTMLDivElement>("#modalBackground"),
+  modalBackground: $<HTMLDialogElement>("#modalBackground"),
   closeModal: $<HTMLButtonElement>("#closeModal"),
   modalCloseIcon: $<HTMLImageElement>("#modalCloseIcon"),
   modalPosterImage: $<HTMLImageElement>("#modalPosterImage"),
