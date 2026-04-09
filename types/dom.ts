@@ -24,5 +24,8 @@ export interface AppElements {
   modalCategory: HTMLParagraphElement;
   modalRateIcon: HTMLImageElement;
   modalRateValue: HTMLSpanElement;
+  myRatingMessage: HTMLSpanElement;
+  myRatingScore: HTMLSpanElement;
+  myRatingButtons: HTMLButtonElement[];
   modalDetail: HTMLParagraphElement;
 }
