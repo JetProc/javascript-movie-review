@@ -1,10 +1,10 @@
 import type { AppElements } from "../types/dom";
 import { fetchMoviePageData } from "./API/api";
 import { PAGE_TITLE } from "./constants/constant";
+import { getAppElements } from "./services/AppElementService";
+import { notifyEmptyQuery, notifyError } from "./services/NotifyService";
+import { makeSkeleton, renderHeroMovie, renderMovies } from "./services/RenderService";
 import type { State } from "../types/state";
-import { getAppElements } from "./utils/AppElementUtil";
-import { notifyEmptyQuery, notifyError } from "./utils/NotifyUtil";
-import { makeSkeleton, renderHeroMovie, renderMovies } from "./utils/RenderUtil";
 
 const state: State = {
   currentPage: 0,
