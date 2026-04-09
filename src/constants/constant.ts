@@ -11,6 +11,8 @@ export const DEFAULT_LANGUAGE = "ko-KR";
 export const API_REQUEST_TIMEOUT_MS = 5000;
 
 export const SKELETON_MOVIE_COUNT = 20;
+export const MOVIE_USER_RATING_STORAGE_KEY = "movie-user-ratings";
+export const MOVIE_USER_RATING_OPTIONS = [2, 4, 6, 8, 10] as const;
 
 export const IMAGE_URL = {
   STAR_IMAGE_URL: `${PUBLIC_IMAGE_BASE_URL}star_empty.png`,
