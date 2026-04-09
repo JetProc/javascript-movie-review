@@ -1,9 +1,12 @@
+export type MovieUserRating = 2 | 4 | 6 | 8 | 10;
+
 export interface Movie {
   id: number;
   title: string;
   rate: number;
   thumbnail_path: string | null;
   hero_path: string | null;
+  userRating: MovieUserRating | null;
 }
 
 export interface MovieDetail {
@@ -13,4 +16,5 @@ export interface MovieDetail {
   genres: string[];
   rate: number;
   overview: string;
+  userRating: MovieUserRating | null;
 }

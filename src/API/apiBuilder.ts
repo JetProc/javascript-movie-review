@@ -51,6 +51,7 @@ export const mapFetchMoviePageDataResponse = (data: TmdbFetchMoviePageDataRespon
       rate: movie.vote_average,
       thumbnail_path: movie.poster_path,
       hero_path: movie.backdrop_path,
+      userRating: null,
     };
   });
 
@@ -69,6 +70,7 @@ export const mapFetchMovieDetailResponse = (data: TmdbMovieDetailResponse): Fetc
     genres: data.genres.map(({ name }) => name),
     rate: data.vote_average,
     overview: data.overview ?? "",
+    userRating: null,
   };
 
   return movieDetail;
