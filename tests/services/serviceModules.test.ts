@@ -26,7 +26,7 @@ vi.mock("simple-notify/dist/simple-notify.css", () => ({}));
 import { notifyEmptyQuery, notifyError } from "../../src/services/NotifyService";
 
 const createStubElement = <T extends Element>(name: string) => ({ name }) as unknown as T;
-const createMockElement = <T extends Element>(tagName: string) => {
+const createMockElement = <T extends HTMLElement>(tagName: string) => {
   const mockElement = {
     tagName,
     className: "",
@@ -46,6 +46,9 @@ const createMockElement = <T extends Element>(tagName: string) => {
     },
     setAttribute(name: string, value: string) {
       this.attributes[name] = value;
+    },
+    getAttribute(name: string) {
+      return this.attributes[name] || null;
     },
   };
 
@@ -139,20 +142,17 @@ describe("service-like modules", () => {
   });
 
   it("영화 목록 카드의 평점을 공용 포맷으로 렌더링한다", () => {
-    const createdElements: Array<ReturnType<typeof createMockElement<Element>>> = [];
+    const createdElements: Array<ReturnType<typeof createMockElement<HTMLElement>>> = [];
 
-    vi.stubGlobal(
-      "document",
-      {
-        createElement: vi.fn((tagName: string) => {
-          const element = createMockElement<Element>(tagName);
+    vi.stubGlobal("document", {
+      createElement: vi.fn((tagName: string) => {
+        const element = createMockElement<HTMLElement>(tagName);
 
-          createdElements.push(element);
+        createdElements.push(element);
 
-          return element;
-        }),
-      } as Pick<Document, "createElement">,
-    );
+        return element;
+      }),
+    } as unknown as Pick<Document, "createElement">);
 
     const movieListElement = createMockElement<HTMLUListElement>("ul");
 
@@ -169,14 +169,14 @@ describe("service-like modules", () => {
       movieListElement,
     );
 
-    const renderedListItem = movieListElement.children[0] as ReturnType<typeof createMockElement<Element>>;
-    const renderedItem = renderedListItem.children[0] as ReturnType<typeof createMockElement<Element>>;
-    const renderedItemDesc = renderedItem.children[1] as ReturnType<typeof createMockElement<Element>>;
-    const renderedRate = renderedItemDesc.children[0] as ReturnType<typeof createMockElement<Element>>;
-    const renderedRateValue = renderedRate.children[1] as ReturnType<typeof createMockElement<Element>>;
+    const renderedListItem = movieListElement.children[0] as ReturnType<typeof createMockElement<HTMLElement>>;
+    const renderedItem = renderedListItem.children[0] as ReturnType<typeof createMockElement<HTMLElement>>;
+    const renderedItemDesc = renderedItem.children[1] as ReturnType<typeof createMockElement<HTMLElement>>;
+    const renderedRate = renderedItemDesc.children[0] as ReturnType<typeof createMockElement<HTMLElement>>;
+    const renderedRateValue = renderedRate.children[1] as ReturnType<typeof createMockElement<HTMLElement>>;
 
     expect(renderedItem.dataset.movieId).toBe("1");
-    expect(renderedItem.attributes.role).toBe("button");
+    expect(renderedItem.getAttribute("role")).toBe("button");
     expect(renderedRateValue.textContent).toBe("7.8");
     expect(createdElements.length).toBeGreaterThan(0);
   });
@@ -234,16 +234,13 @@ describe("service-like modules", () => {
       }),
     };
 
-    vi.stubGlobal(
-      "document",
-      {
-        body: {
-          classList: {
-            toggle: bodyClassToggle,
-          },
+    vi.stubGlobal("document", {
+      body: {
+        classList: {
+          toggle: bodyClassToggle,
         },
-      } as Pick<Document, "body">,
-    );
+      },
+    } as unknown as Pick<Document, "body">);
 
     const elements = {
       modalBackground: dialog,
@@ -259,6 +256,7 @@ describe("service-like modules", () => {
       },
       modalCategory: {
         textContent: "",
+        hidden: false,
       },
       modalRateIcon: {
         src: "",
