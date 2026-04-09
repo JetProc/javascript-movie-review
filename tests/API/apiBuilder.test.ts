@@ -82,6 +82,7 @@ describe("apiBuilder", () => {
           rate: 7.8,
           thumbnail_path: "/poster-1.jpg",
           hero_path: "/backdrop-1.jpg",
+          userRating: null,
         },
       ],
     });
@@ -120,6 +121,7 @@ describe("apiBuilder", () => {
       genres: ["모험", "판타지"],
       rate: 7.7,
       overview: "도비가 나타나 학교로 돌아가지 말라고 경고한다.",
+      userRating: null,
     });
   });
 });
