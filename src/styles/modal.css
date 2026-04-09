@@ -24,6 +24,7 @@ body.modal-open {
 }
 
 .modal {
+  position: relative;
   background-color: var(--color-bluegray-90);
   padding: 24px;
   border-radius: 24px;
@@ -33,13 +34,13 @@ body.modal-open {
 }
 
 .modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  margin-bottom: 20px;
+  margin: 0;
 }
 
 .close-modal {
+  position: absolute;
+  top: 20px;
+  right: 20px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -99,7 +100,6 @@ body.modal-open {
   margin-right: 6px;
   color: var(--color-bluegray-10);
   font-size: 0.95rem;
-  font-weight: 700;
 }
 
 .modal-divider {
@@ -113,7 +113,7 @@ body.modal-open {
 }
 
 .modal-detail-title {
-  font-size: 1rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: var(--color-bluegray-10);
 }
@@ -135,7 +135,7 @@ body.modal-open {
   }
 
   .modal-header {
-    margin-bottom: 16px;
+    margin: 0;
   }
 
   .modal-container {
