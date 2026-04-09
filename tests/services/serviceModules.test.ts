@@ -3,13 +3,15 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { BASE_URL, IMAGE_URL } from "../../src/constants/constant";
 import { getAppElements } from "../../src/services/AppElementService";
 import {
+  clearMovieDetailModal,
   closeMovieDetailModal,
   initializeMovieDetailModal,
   openMovieDetailModal,
   renderMovieDetail,
+  syncMovieDetailModalClosedState,
 } from "../../src/services/MovieDetailModalService";
-import { createImageUrl } from "../../src/services/MovieService";
-import { renderHeroMovie } from "../../src/services/RenderService";
+import { createImageUrl, formatMovieRate } from "../../src/services/MovieService";
+import { renderHeroMovie, renderMovies } from "../../src/services/RenderService";
 
 const { notifyConstructorMock } = vi.hoisted(() => ({
   notifyConstructorMock: vi.fn(),
@@ -24,6 +26,31 @@ vi.mock("simple-notify/dist/simple-notify.css", () => ({}));
 import { notifyEmptyQuery, notifyError } from "../../src/services/NotifyService";
 
 const createStubElement = <T extends Element>(name: string) => ({ name }) as unknown as T;
+const createMockElement = <T extends Element>(tagName: string) => {
+  const mockElement = {
+    tagName,
+    className: "",
+    src: "",
+    alt: "",
+    textContent: "",
+    hidden: false,
+    dataset: {} as Record<string, string>,
+    tabIndex: -1,
+    children: [] as unknown[],
+    attributes: {} as Record<string, string>,
+    append(...children: unknown[]) {
+      this.children.push(...children);
+    },
+    replaceChildren(...children: unknown[]) {
+      this.children = children;
+    },
+    setAttribute(name: string, value: string) {
+      this.attributes[name] = value;
+    },
+  };
+
+  return mockElement as unknown as T;
+};
 
 describe("service-like modules", () => {
   afterEach(() => {
@@ -47,7 +74,7 @@ describe("service-like modules", () => {
       [".hero-detail-button", createStubElement<HTMLButtonElement>("heroDetailButton")],
       [".skeleton-card", createStubElement<HTMLUListElement>("skeletonCard")],
       ["#see-more-btn", createStubElement<HTMLButtonElement>("seeMoreBtn")],
-      ["#modalBackground", createStubElement<HTMLDivElement>("modalBackground")],
+      ["#modalBackground", createStubElement<HTMLDialogElement>("modalBackground")],
       ["#closeModal", createStubElement<HTMLButtonElement>("closeModal")],
       ["#modalCloseIcon", createStubElement<HTMLImageElement>("modalCloseIcon")],
       ["#modalPosterImage", createStubElement<HTMLImageElement>("modalPosterImage")],
@@ -106,6 +133,54 @@ describe("service-like modules", () => {
     expect(createImageUrl(BASE_URL.POSTER_BASE_URL, "")).toBe(IMAGE_URL.DEFAULT_THUMBNAIL_IMAGE_URL);
   });
 
+  it("영화 평점을 소수점 첫째 자리까지 반올림해 표시한다", () => {
+    expect(formatMovieRate(7.76)).toBe("7.8");
+    expect(formatMovieRate(7.14)).toBe("7.1");
+  });
+
+  it("영화 목록 카드의 평점을 공용 포맷으로 렌더링한다", () => {
+    const createdElements: Array<ReturnType<typeof createMockElement<Element>>> = [];
+
+    vi.stubGlobal(
+      "document",
+      {
+        createElement: vi.fn((tagName: string) => {
+          const element = createMockElement<Element>(tagName);
+
+          createdElements.push(element);
+
+          return element;
+        }),
+      } as Pick<Document, "createElement">,
+    );
+
+    const movieListElement = createMockElement<HTMLUListElement>("ul");
+
+    renderMovies(
+      [
+        {
+          id: 1,
+          title: "인사이드 아웃 2",
+          rate: 7.76,
+          thumbnail_path: "/poster.jpg",
+          hero_path: "/backdrop.jpg",
+        },
+      ],
+      movieListElement,
+    );
+
+    const renderedListItem = movieListElement.children[0] as ReturnType<typeof createMockElement<Element>>;
+    const renderedItem = renderedListItem.children[0] as ReturnType<typeof createMockElement<Element>>;
+    const renderedItemDesc = renderedItem.children[1] as ReturnType<typeof createMockElement<Element>>;
+    const renderedRate = renderedItemDesc.children[0] as ReturnType<typeof createMockElement<Element>>;
+    const renderedRateValue = renderedRate.children[1] as ReturnType<typeof createMockElement<Element>>;
+
+    expect(renderedItem.dataset.movieId).toBe("1");
+    expect(renderedItem.attributes.role).toBe("button");
+    expect(renderedRateValue.textContent).toBe("7.8");
+    expect(createdElements.length).toBeGreaterThan(0);
+  });
+
   it("히어로 영역을 현재 영화 정보로 동기화한다", () => {
     const elements = {
       heroBackdrop: {
@@ -128,7 +203,7 @@ describe("service-like modules", () => {
       {
         id: 1,
         title: "해리 포터와 마법사의 돌",
-        rate: 7.8,
+        rate: 7.76,
         thumbnail_path: "/poster.jpg",
         hero_path: "/backdrop.jpg",
       },
@@ -145,6 +220,19 @@ describe("service-like modules", () => {
     const modalBackgroundClassToggle = vi.fn();
     const modalBackgroundSetAttribute = vi.fn();
     const bodyClassToggle = vi.fn();
+    const dialog = {
+      open: false,
+      classList: {
+        toggle: modalBackgroundClassToggle,
+      },
+      setAttribute: modalBackgroundSetAttribute,
+      showModal: vi.fn(() => {
+        dialog.open = true;
+      }),
+      close: vi.fn(() => {
+        dialog.open = false;
+      }),
+    };
 
     vi.stubGlobal(
       "document",
@@ -158,12 +246,7 @@ describe("service-like modules", () => {
     );
 
     const elements = {
-      modalBackground: {
-        classList: {
-          toggle: modalBackgroundClassToggle,
-        },
-        setAttribute: modalBackgroundSetAttribute,
-      },
+      modalBackground: dialog,
       modalCloseIcon: {
         src: "",
       },
@@ -192,9 +275,17 @@ describe("service-like modules", () => {
 
     expect(elements.modalCloseIcon.src).toBe(IMAGE_URL.MODAL_CLOSE_BUTTON_IMAGE_URL);
     expect(elements.modalRateIcon.src).toBe(IMAGE_URL.FILLED_STAR_IMAGE_URL);
+    expect(elements.modalPosterImage.src).toBe("");
+    expect(elements.modalPosterImage.alt).toBe("");
+    expect(elements.modalTitle.textContent).toBe("");
+    expect(elements.modalCategory.textContent).toBe("");
+    expect(elements.modalCategory.hidden).toBe(true);
+    expect(elements.modalRateValue.textContent).toBe("");
+    expect(elements.modalDetail.textContent).toBe("");
     expect(modalBackgroundClassToggle).toHaveBeenCalledWith("active", false);
     expect(modalBackgroundSetAttribute).toHaveBeenCalledWith("aria-hidden", "true");
     expect(bodyClassToggle).toHaveBeenCalledWith("modal-open", false);
+    expect(dialog.close).not.toHaveBeenCalled();
 
     renderMovieDetail(
       {
@@ -202,29 +293,46 @@ describe("service-like modules", () => {
         title: "인사이드 아웃 2",
         release_year: "2024",
         genres: ["모험", "애니메이션"],
-        rate: 7.7,
+        rate: 7.76,
         overview: "새로운 감정들이 등장하며 벌어지는 이야기",
       },
       elements as never,
     );
     openMovieDetailModal(elements as never);
 
+    expect(dialog.showModal).toHaveBeenCalledTimes(1);
     expect(elements.modalPosterImage.src).toBe(`${BASE_URL.DETAIL_POSTER_BASE_URL}/detail-poster.jpg`);
     expect(elements.modalPosterImage.alt).toBe("인사이드 아웃 2");
     expect(elements.modalTitle.textContent).toBe("인사이드 아웃 2");
     expect(elements.modalCategory.textContent).toBe("2024 · 모험, 애니메이션");
     expect(elements.modalRateIcon.src).toBe(IMAGE_URL.FILLED_STAR_IMAGE_URL);
-    expect(elements.modalRateValue.textContent).toBe("7.7");
+    expect(elements.modalRateValue.textContent).toBe("7.8");
     expect(elements.modalDetail.textContent).toBe("새로운 감정들이 등장하며 벌어지는 이야기");
     expect(modalBackgroundClassToggle).toHaveBeenCalledWith("active", true);
     expect(modalBackgroundSetAttribute).toHaveBeenCalledWith("aria-hidden", "false");
     expect(bodyClassToggle).toHaveBeenCalledWith("modal-open", true);
 
+    clearMovieDetailModal(elements as never);
+
+    expect(elements.modalPosterImage.src).toBe("");
+    expect(elements.modalPosterImage.alt).toBe("");
+    expect(elements.modalTitle.textContent).toBe("");
+    expect(elements.modalCategory.textContent).toBe("");
+    expect(elements.modalCategory.hidden).toBe(true);
+    expect(elements.modalRateValue.textContent).toBe("");
+    expect(elements.modalDetail.textContent).toBe("");
+
     closeMovieDetailModal(elements as never);
 
+    expect(dialog.close).toHaveBeenCalledTimes(1);
     expect(modalBackgroundClassToggle).toHaveBeenLastCalledWith("active", false);
     expect(modalBackgroundSetAttribute).toHaveBeenLastCalledWith("aria-hidden", "true");
     expect(bodyClassToggle).toHaveBeenLastCalledWith("modal-open", false);
+
+    syncMovieDetailModalClosedState(elements as never);
+
+    expect(modalBackgroundClassToggle).toHaveBeenLastCalledWith("active", false);
+    expect(modalBackgroundSetAttribute).toHaveBeenLastCalledWith("aria-hidden", "true");
   });
 
   it("오류 알림을 표시한다", () => {
