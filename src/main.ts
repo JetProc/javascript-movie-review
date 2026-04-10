@@ -1,110 +1,32 @@
 import type { AppElements } from "../types/dom";
-import { fetchMovieDetail, fetchMoviePageData } from "./API/api";
-import { PAGE_TITLE } from "./constants/constant";
-import type { MovieDetail, MovieUserRating } from "../types/movie";
-import { createMovieRatingRepository } from "./repositories/MovieRatingRepository";
-import { getAppElements } from "./services/AppElementService";
-import {
-  clearMovieDetailModal,
-  closeMovieDetailModal,
-  initializeMovieDetailModal,
-  openMovieDetailModal,
-  renderMovieDetail,
-  syncMovieDetailModalClosedState,
-} from "./services/MovieDetailModalService";
-import { applyMovieUserRating, applyMovieUserRatings, isMovieUserRating } from "./services/MovieRatingService";
-import { notifyEmptyQuery, notifyError } from "./services/NotifyService";
-import { makeSkeleton, renderHeroMovie, renderMovies } from "./services/RenderService";
+import type { MovieUserRating } from "../types/movieRating";
 import type { State } from "../types/state";
+import { fetchMovieDetail, fetchMoviePageData } from "./API/api";
+import { getAppElements } from "./services/AppElementService";
+import { createMovieDetailController } from "./services/MovieDetailController";
+import { initializeMovieDetailModal, syncMovieDetailModalClosedState } from "./services/MovieDetailModalService";
+import { applyMovieUserRatings, isMovieUserRating } from "./services/MovieRatingService";
+import {
+  applyMovieUserRatingToMovieList,
+  createInitialMoviePageState,
+  createNextMoviePageState,
+  syncMoviePage,
+  syncMovieSectionTitle,
+} from "./services/MoviePageStateService";
+import { notifyEmptyQuery, notifyError } from "./services/NotifyService";
+import { makeSkeleton, renderMovies } from "./services/RenderService";
+import { createMovieRatingRepository } from "./repositories/MovieRatingRepository";
 
-const state: State = {
-  currentPage: 0,
-  totalPage: 0,
-  movieList: [],
-  query: "",
-};
+const state: State = createInitialMoviePageState();
 const movieRatingRepository = createMovieRatingRepository();
-let latestMovieDetailRequestId = 0;
-let currentMovieDetailId: number | null = null;
-let currentMovieDetail: MovieDetail | null = null;
-
-const syncHeroSection = (elements: AppElements) => {
-  const shouldShowHero = state.query === "" && state.movieList.length > 0;
-
-  elements.heroSection.hidden = !shouldShowHero;
-  elements.siteHeader.classList.toggle("site-header--overlay", shouldShowHero);
-
-  if (!shouldShowHero) {
-    return;
-  }
-
-  renderHeroMovie(state.movieList[0], elements);
-};
-
-const syncSeeMoreButton = (elements: AppElements) => {
-  const shouldHideSeeMoreButton = state.currentPage >= state.totalPage;
-
-  elements.seeMoreBtn.hidden = shouldHideSeeMoreButton;
-};
-
-const syncNoResultSection = (elements: AppElements) => {
-  const shouldHideNoResultSection = !(state.query !== "" && state.movieList.length === 0);
-
-  elements.noResult.hidden = shouldHideNoResultSection;
-};
-
-const updateMovieState = (newState: State) => {
-  state.query = newState.query;
-  state.currentPage = newState.currentPage;
-  state.totalPage = newState.totalPage;
-  state.movieList = newState.movieList;
-};
 
 const clearSkeleton = (elements: AppElements) => {
   elements.skeletonCard.replaceChildren();
 };
 
-const syncPage = (elements: AppElements) => {
-  syncHeroSection(elements);
-  syncSeeMoreButton(elements);
-  syncNoResultSection(elements);
-};
-
-const loadMovies = async (elements: AppElements, query: string = state.query, shouldReset = false) => {
-  const nextPage = shouldReset ? 1 : state.currentPage + 1;
-  const previousMovieList = shouldReset ? [] : state.movieList;
-
-  makeSkeleton(elements.skeletonCard);
-
-  try {
-    const response = await fetchMoviePageData(nextPage, query);
-    const movieList = await hydrateMoviesWithUserRatings(response.results);
-
-    updateMovieState({
-      currentPage: response.currentPage,
-      totalPage: response.totalPages,
-      movieList: [...previousMovieList, ...movieList],
-      query,
-    });
-
-    if (state.currentPage === 1) {
-      elements.movieSectionTitle.textContent = state.query ? PAGE_TITLE.SEARCH(state.query) : PAGE_TITLE.POPULAR;
-    }
-
-    renderMovies(state.movieList, elements.movieList);
-    syncPage(elements);
-  } finally {
-    clearSkeleton(elements);
-  }
-};
-
-const initializeMoviePage = async (elements: AppElements) => {
-  await loadMovies(elements);
-};
-
 const handleAsyncError = (elements: AppElements, error: unknown) => {
   clearSkeleton(elements);
-  syncPage(elements);
+  syncMoviePage(elements, state);
   notifyError(error);
 };
 
@@ -153,86 +75,32 @@ const clearMovieDetailTriggerFocus = () => {
   blurActiveElement();
 };
 
-const syncMovieListUserRating = (movieId: number, userRating: MovieUserRating) => {
-  state.movieList = state.movieList.map((movie) => {
-    if (movie.id !== movieId) {
-      return movie;
-    }
-
-    return applyMovieUserRating(movie, userRating);
-  });
-};
-
-const resetCurrentMovieDetailState = () => {
-  currentMovieDetailId = null;
-  currentMovieDetail = null;
-};
-
 const hydrateMoviesWithUserRatings = async (movieList: State["movieList"]) => {
   const movieRatings = await movieRatingRepository.getMany(movieList.map(({ id }) => id));
 
   return applyMovieUserRatings(movieList, movieRatings);
 };
 
-const loadMovieDetailWithUserRating = async (movieId: number) => {
-  const [movieDetail, userRating] = await Promise.all([fetchMovieDetail(movieId), movieRatingRepository.get(movieId)]);
+const loadMovies = async (elements: AppElements, query: string = state.query, shouldReset = false) => {
+  const nextPage = shouldReset ? 1 : state.currentPage + 1;
 
-  return applyMovieUserRating(movieDetail, userRating);
-};
-
-const openMovieDetailById = async (elements: AppElements, movieId: number) => {
-  const requestId = ++latestMovieDetailRequestId;
-
-  clearMovieDetailModal(elements);
-  resetCurrentMovieDetailState();
+  makeSkeleton(elements.skeletonCard);
 
   try {
-    const movieDetail = await loadMovieDetailWithUserRating(movieId);
+    const response = await fetchMoviePageData(nextPage, query);
+    const hydratedMovieList = await hydrateMoviesWithUserRatings(response.results);
+    const nextState = createNextMoviePageState(state, response, hydratedMovieList, query, shouldReset);
 
-    if (requestId !== latestMovieDetailRequestId) {
-      return;
-    }
-
-    currentMovieDetailId = movieId;
-    currentMovieDetail = movieDetail;
-    renderMovieDetail(movieDetail, elements);
-    openMovieDetailModal(elements);
-  } catch (error) {
-    if (requestId !== latestMovieDetailRequestId) {
-      return;
-    }
-
-    closeMovieDetailModal(elements);
-    notifyError(error);
+    Object.assign(state, nextState);
+    syncMovieSectionTitle(elements, state);
+    renderMovies(state.movieList, elements.movieList);
+    syncMoviePage(elements, state);
+  } finally {
+    clearSkeleton(elements);
   }
 };
 
-const updateMovieUserRating = async (elements: AppElements, userRating: MovieUserRating) => {
-  if (!currentMovieDetailId || !currentMovieDetail) {
-    return;
-  }
-
-  await movieRatingRepository.set(currentMovieDetailId, userRating);
-
-  currentMovieDetail = applyMovieUserRating(currentMovieDetail, userRating);
-  syncMovieListUserRating(currentMovieDetailId, userRating);
-  renderMovieDetail(currentMovieDetail, elements);
-};
-
-const main = async () => {
-  const elements = getAppElements();
-
-  initializeMovieDetailModal(elements);
-  bindEvents(elements);
-
-  await executeWithErrorHandling(elements, () => initializeMoviePage(elements));
-};
-
-window.addEventListener("load", () => {
-  void main();
-});
-
-const bindEvents = (elements: AppElements) => {
+const bindEvents = (elements: AppElements, detailController: ReturnType<typeof createMovieDetailController>) => {
   elements.seeMoreBtn.addEventListener("click", async (event) => {
     event.preventDefault();
     await executeWithErrorHandling(elements, () => loadMovies(elements));
@@ -245,7 +113,7 @@ const bindEvents = (elements: AppElements) => {
       return;
     }
 
-    await openMovieDetailById(elements, movieId);
+    await detailController.openById(movieId);
   });
 
   elements.movieList.addEventListener("keydown", async (event) => {
@@ -260,7 +128,7 @@ const bindEvents = (elements: AppElements) => {
     }
 
     event.preventDefault();
-    await openMovieDetailById(elements, movieId);
+    await detailController.openById(movieId);
   });
 
   elements.searchForm.addEventListener("submit", async (event) => {
@@ -286,11 +154,11 @@ const bindEvents = (elements: AppElements) => {
       return;
     }
 
-    await openMovieDetailById(elements, heroMovie.id);
+    await detailController.openById(heroMovie.id);
   });
 
   elements.closeModal.addEventListener("click", () => {
-    closeMovieDetailModal(elements);
+    detailController.close();
   });
 
   elements.modalBackground.addEventListener("click", (event) => {
@@ -298,13 +166,24 @@ const bindEvents = (elements: AppElements) => {
       return;
     }
 
-    closeMovieDetailModal(elements);
+    detailController.close();
   });
 
   elements.modalBackground.addEventListener("close", () => {
-    syncMovieDetailModalClosedState(elements);
+    if (elements.modalBackground.classList.contains("active")) {
+      syncMovieDetailModalClosedState(elements);
+    }
+
+    detailController.syncClosedState();
     clearMovieDetailTriggerFocus();
-    resetCurrentMovieDetailState();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || !elements.modalBackground.open) {
+      return;
+    }
+
+    detailController.close();
   });
 
   elements.myRatingButtons.forEach((button) => {
@@ -316,10 +195,32 @@ const bindEvents = (elements: AppElements) => {
       }
 
       try {
-        await updateMovieUserRating(elements, ratingValue);
+        await detailController.updateUserRating(ratingValue as MovieUserRating);
       } catch (error) {
         notifyError(error);
       }
     });
   });
 };
+
+const main = async () => {
+  const elements = getAppElements();
+  const detailController = createMovieDetailController({
+    elements,
+    loadMovieDetail: fetchMovieDetail,
+    movieRatingRepository,
+    onError: notifyError,
+    onMovieRated: (movieId, userRating) => {
+      state.movieList = applyMovieUserRatingToMovieList(state.movieList, movieId, userRating);
+    },
+  });
+
+  initializeMovieDetailModal(elements);
+  bindEvents(elements, detailController);
+
+  await executeWithErrorHandling(elements, () => loadMovies(elements));
+};
+
+window.addEventListener("load", () => {
+  void main();
+});
