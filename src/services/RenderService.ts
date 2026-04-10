@@ -23,7 +23,6 @@ const createMovieListItemElement = (movie: Movie) => {
 
   thumbnail.className = "thumbnail";
   thumbnail.src = posterImageUrl;
-  thumbnail.alt = movie.title;
 
   itemDesc.className = "item-desc";
 
@@ -31,7 +30,6 @@ const createMovieListItemElement = (movie: Movie) => {
 
   star.src = IMAGE_URL.STAR_IMAGE_URL;
   star.className = "star";
-  star.alt = "";
   star.setAttribute("aria-hidden", "true");
 
   rateValue.textContent = formatMovieRate(movie.rate);
