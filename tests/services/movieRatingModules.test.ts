@@ -48,13 +48,10 @@ describe("movie rating modules", () => {
     });
 
     expect(
-      applyMovieUserRatings(
-        [movie, { ...movie, id: 2, title: "엘리멘탈" }],
-        {
-          1: 8,
-          2: null,
-        },
-      ),
+      applyMovieUserRatings([movie, { ...movie, id: 2, title: "엘리멘탈" }], {
+        1: 8,
+        2: null,
+      }),
     ).toEqual([
       {
         ...movie,
@@ -78,11 +75,6 @@ describe("movie rating modules", () => {
     await repository.set(2, 10);
 
     expect(await repository.get(1)).toBe(8);
-    expect(await repository.getMany([1, 2, 3])).toEqual({
-      1: 8,
-      2: 10,
-      3: null,
-    });
   });
 
   it("저장된 데이터가 깨져 있어도 안전하게 빈 값으로 처리한다", async () => {

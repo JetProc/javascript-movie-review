@@ -79,7 +79,10 @@ describe("service-like modules", () => {
   });
 
   it("앱에서 사용하는 주요 DOM 요소를 조회한다", () => {
-    const ratingButtons = [createStubElement<HTMLButtonElement>("ratingButton1"), createStubElement<HTMLButtonElement>("ratingButton2")];
+    const ratingButtons = [
+      createStubElement<HTMLButtonElement>("ratingButton1"),
+      createStubElement<HTMLButtonElement>("ratingButton2"),
+    ];
     const elementBySelector = new Map<string, Element>([
       [".thumbnail-list", createStubElement<HTMLUListElement>("movieList")],
       [".site-header", createStubElement<HTMLElement>("siteHeader")],
@@ -117,13 +120,10 @@ describe("service-like modules", () => {
       return [];
     });
 
-    vi.stubGlobal(
-      "document",
-      {
-        querySelector,
-        querySelectorAll,
-      } as Pick<Document, "querySelector" | "querySelectorAll">,
-    );
+    vi.stubGlobal("document", {
+      querySelector,
+      querySelectorAll,
+    } as unknown as Pick<Document, "querySelector" | "querySelectorAll">);
 
     const elements = getAppElements();
 
@@ -176,18 +176,15 @@ describe("service-like modules", () => {
   it("영화 목록 카드의 평점을 공용 포맷으로 렌더링한다", () => {
     const createdElements: Array<ReturnType<typeof createMockElement<HTMLElement>>> = [];
 
-    vi.stubGlobal(
-      "document",
-      {
-        createElement: vi.fn((tagName: string) => {
-          const element = createMockElement<HTMLElement>(tagName);
+    vi.stubGlobal("document", {
+      createElement: vi.fn((tagName: string) => {
+        const element = createMockElement<HTMLElement>(tagName);
 
-          createdElements.push(element);
+        createdElements.push(element);
 
-          return element;
-        }),
-      } as unknown as Pick<Document, "createElement">,
-    );
+        return element;
+      }),
+    } as unknown as Pick<Document, "createElement">);
 
     const movieListElement = createMockElement<HTMLUListElement>("ul");
 
@@ -272,16 +269,13 @@ describe("service-like modules", () => {
       }),
     };
 
-    vi.stubGlobal(
-      "document",
-      {
-        body: {
-          classList: {
-            toggle: bodyClassToggle,
-          },
+    vi.stubGlobal("document", {
+      body: {
+        classList: {
+          toggle: bodyClassToggle,
         },
-      } as unknown as Pick<Document, "body">,
-    );
+      },
+    } as unknown as Pick<Document, "body">);
 
     const elements = {
       modalBackground: dialog,
