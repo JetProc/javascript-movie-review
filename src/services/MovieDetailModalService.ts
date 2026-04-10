@@ -1,6 +1,7 @@
 import type { AppElements } from "../../types/dom";
-import type { MovieDetail, MovieUserRating } from "../../types/movie";
-import { BASE_URL, IMAGE_URL, MOVIE_USER_RATING_OPTIONS } from "../constants/constant";
+import type { MovieDetail } from "../../types/movie";
+import { MOVIE_USER_RATING_OPTIONS, type MovieUserRating } from "../../types/movieRating";
+import { BASE_URL, IMAGE_URL } from "../constants/constant";
 import { formatMovieUserRatingScore, getMovieUserRatingLabel } from "./MovieRatingService";
 import { createImageUrl, formatMovieRate } from "./MovieService";
 
@@ -28,14 +29,14 @@ export const clearMovieDetailModal = (elements: AppElements) => {
 
 export const syncMovieDetailModalClosedState = (elements: AppElements) => {
   setMovieDetailModalVisibility(elements, false);
+  clearMovieDetailModal(elements);
 };
 
 export const initializeMovieDetailModal = (elements: AppElements) => {
   elements.modalCloseIcon.src = IMAGE_URL.MODAL_CLOSE_BUTTON_IMAGE_URL;
   elements.modalRateIcon.src = IMAGE_URL.FILLED_STAR_IMAGE_URL;
   clearMovieDetailModal(elements);
-
-  closeMovieDetailModal(elements);
+  setMovieDetailModalVisibility(elements, false);
 };
 
 export const renderMovieDetail = (movieDetail: MovieDetail, elements: AppElements) => {
@@ -82,6 +83,5 @@ export const closeMovieDetailModal = (elements: AppElements) => {
     elements.modalBackground.close();
   }
 
-  setMovieDetailModalVisibility(elements, false);
-  clearMovieDetailModal(elements);
+  syncMovieDetailModalClosedState(elements);
 };
