@@ -50,7 +50,6 @@ FE 레벨1 영화 리뷰 미션
 - [x] 모달에서 별점 입력 시 해당 영화의 ID와 별점 데이터를 로컬 스토리지에 저장한다 (ex. { movieId: score }).
 - [x] 앱 초기 로드 시 로컬 스토리지에서 전체 별점 데이터를 가져와 메인 목록과 상세 모달의 '내 별점' 상태에 동기화한다.
 
-
 # API 명세
 
 ## 1. Popular Movies
@@ -65,7 +64,7 @@ FE 레벨1 영화 리뷰 미션
 | 이름 | 타입 | 설명 | 제약 |
 | --- | --- | --- | --- |
 | `page` | `number` | 조회할 페이지 번호 | `1~500` |
-| `language` | `string` | 응답 언어 | - |
+| `language` | `string` | 응답 언어 (ex: `ko-KR`) | - |
 
 
 ## 2. Search Movies
@@ -81,9 +80,42 @@ FE 레벨1 영화 리뷰 미션
 | --- | --- | --- | --- |
 | `query` | `string` | 검색어 | - |
 | `page` | `number` | 조회할 페이지 번호 | `1~500` |
-| `language` | `string` | 응답 언어 | - |
+| `language` | `string` | 응답 언어 (ex: `ko-KR`) | - |
 
-# 1. 전체적인 사용자 핵심 시나리오 (Core User Scenario)
+
+## 3. Movie Detail
+
+| 항목 | 내용 |
+| --- | --- |
+| URL | `https://api.themoviedb.org/3/movie/{movie_id}` |
+| Method | `GET` |
+
+### Path Parameters
+
+| 이름 | 타입 | 설명 | 제약 |
+| --- | --- | --- | --- |
+| `movie_id` | `integer` | 상세 정보를 조회할 영화의 고유 ID | - |
+
+### Query Parameters
+
+| 이름 | 타입 | 설명 | 제약 |
+| --- | --- | --- | --- |
+| `language` | `string` | 응답 언어 (ex: `ko-KR`) | - |
+
+### Response (주요 활용 데이터)
+
+| 필드명 | 타입 | 설명 | 비고 |
+| --- | --- | --- | --- |
+| `poster_path` | `string` | 영화 포스터 이미지 경로 | 원본 이미지 URL 조합에 사용 |
+| `title` | `string` | 영화 제목 | |
+| `release_date` | `string` | 영화 개봉일 | `YYYY-MM-DD` 형식 (연도만 추출하여 사용) |
+| `genres` | `array` | 장르 목록 | 배열 내 각 객체의 `name` 속성 추출하여 사용 |
+| `vote_average` | `number` | 평균 별점 | |
+| `overview` | `string` | 영화 줄거리 | |
+
+
+
+# 전체적인 사용자 핵심 시나리오 (Core User Scenario)
 
 **단계 1: 메인 화면 진입 및 탐색**
 
