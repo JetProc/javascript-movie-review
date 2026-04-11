@@ -1,8 +1,7 @@
 import type { Movie, MovieDetail } from "../../types/movie";
 import { MOVIE_USER_RATING_LABELS, MOVIE_USER_RATING_OPTIONS, type MovieUserRating } from "../../types/movieRating";
 
-const DEFAULT_MOVIE_USER_RATING_LABEL = "별점을 남겨주세요";
-
+const DEFAULT_MOVIE_USER_RATING_LABEL = "별점을 남겨보세요";
 //별점 유효성 검사
 export const isMovieUserRating = (value: unknown): value is MovieUserRating => {
   return typeof value === "number" && MOVIE_USER_RATING_OPTIONS.some((option) => option === value);

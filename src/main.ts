@@ -199,9 +199,10 @@ const bindEvents = (elements: AppElements, detailController: ReturnType<typeof c
   elements.modalBackground.addEventListener("close", () => {
     if (elements.modalBackground.classList.contains("active")) {
       syncMovieDetailModalClosedState(elements);
+
+      detailController.syncClosedState();
     }
 
-    detailController.syncClosedState();
     clearMovieDetailTriggerFocus();
   });
 

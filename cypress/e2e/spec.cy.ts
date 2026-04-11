@@ -614,3 +614,58 @@ describe("검색 화면", () => {
     cy.get(".thumbnail-list strong img").should("not.exist");
   });
 });
+
+describe("반응형 UI 및 기기별 특화 기능", () => {
+  beforeEach(() => {
+    cy.clearLocalStorage();
+    mockPopularMoviePage(1);
+    mockMovieDetail({
+      movieId: 1,
+      title: "인기 영화 1",
+      alias: "getMovieDetail",
+    });
+  });
+
+  it("[데스크톱] 영화 목록이 4열로 보이고, 모달에 포스터가 정상 노출된다", () => {
+    cy.viewport(1280, 800);
+    cy.visit(APP_URL);
+    cy.wait("@getPopularMoviesPage1");
+
+    cy.get(".footer").should("be.visible").and("have.css", "position", "fixed");
+
+    cy.contains(".thumbnail-list .item", "인기 영화 1").click();
+    cy.wait("@getMovieDetail");
+
+    cy.get("#modalPosterImage").should("be.visible");
+    cy.get(".my-rating-row").should("have.css", "flex-direction", "row");
+  });
+
+  it("[모바일] 모달이 바텀 시트로 열리며 공간 확보를 위해 포스터 이미지가 숨김 처리된다", () => {
+    cy.viewport("iphone-6");
+    cy.visit(APP_URL);
+    cy.wait("@getPopularMoviesPage1");
+
+    cy.contains(".thumbnail-list .item", "인기 영화 1").click();
+    cy.wait("@getMovieDetail");
+
+    cy.get("#modalPosterImage").should("not.be.visible");
+
+    cy.get("#modalTitle").should("be.visible");
+
+    cy.get(".my-rating-row").should("have.css", "flex-direction", "column");
+  });
+
+  it("무한 스크롤 시 하단 푸터에 콘텐츠가 가려지지 않고 정상 작동한다", () => {
+    mockPopularMoviePage(2);
+    cy.viewport(1280, 800);
+    cy.visit(APP_URL);
+    cy.wait("@getPopularMoviesPage1");
+
+    cy.get("#infinite-scroll-sentinel").scrollIntoView();
+    cy.wait("@getPopularMoviesPage2");
+
+    cy.get(".thumbnail-list li").should("have.length", 40);
+
+    cy.get(".footer").should("be.visible");
+  });
+});
