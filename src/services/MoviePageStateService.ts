@@ -41,12 +41,13 @@ export const syncMovieSectionTitle = (elements: AppElements, state: State) => {
 
 export const syncMoviePage = (elements: AppElements, state: State) => {
   const shouldShowHero = state.query === "" && state.movieList.length > 0;
-  const shouldHideSeeMoreButton = state.currentPage >= state.totalPage;
+
+  const shouldHideSentinel = state.movieList.length === 0 || state.currentPage >= state.totalPage;
   const shouldHideNoResultSection = !(state.query !== "" && state.movieList.length === 0);
 
   elements.heroSection.hidden = !shouldShowHero;
   elements.siteHeader.classList.toggle("site-header--overlay", shouldShowHero);
-  elements.seeMoreBtn.hidden = shouldHideSeeMoreButton;
+  elements.infiniteScrollSentinel.hidden = shouldHideSentinel;
   elements.noResult.hidden = shouldHideNoResultSection;
 
   if (shouldShowHero) {

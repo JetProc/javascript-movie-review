@@ -14,7 +14,7 @@ export interface AppElements {
   heroDetailButton: HTMLButtonElement;
 
   skeletonCard: HTMLUListElement;
-  seeMoreBtn: HTMLButtonElement;
+  infiniteScrollSentinel: HTMLDivElement;
 
   modalBackground: HTMLDialogElement;
   closeModal: HTMLButtonElement;
