@@ -16,6 +16,12 @@ body {
   min-height: 100vh;
 }
 
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -39,11 +45,19 @@ main > section {
   justify-content: center;
 }
 
+main > section {
+  padding: 40px 5%;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
 main {
   display: flex;
   flex: 1;
   flex-direction: column;
-  margin: 64px 0;
+  margin: 4vh 0;
 }
 
 .star {
@@ -75,9 +89,8 @@ button.primary {
 }
 
 #app {
-  display: flex;
-  min-height: 100vh;
-  flex-direction: column;
+  padding-bottom: 80px;
+  box-sizing: border-box;
 }
 
 .container {
@@ -108,14 +121,16 @@ span.rate-value {
   font-size: 1.66rem;
 }
 
-footer.footer {
-  height: 160px;
-  background-color: var(--color-bluegray-80);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: var(--color-bluegray-80, #000);
+  z-index: 1000;
+  padding: 20px 0;
   text-align: center;
-  font-size: 1.1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 footer.footer p:not(:last-child) {
@@ -136,7 +151,7 @@ footer.footer p:not(:last-child) {
   position: relative;
 
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
 
   max-width: 1280px;
@@ -146,12 +161,7 @@ footer.footer p:not(:last-child) {
 }
 
 .logo {
-  position: absolute;
-
-  top: 50%;
-  left: 54px;
-
-  transform: translateY(-50%);
+  margin-bottom: 16px;
 }
 
 #search-form {
@@ -226,16 +236,15 @@ footer.footer p:not(:last-child) {
 }
 
 .hero-backdrop {
-  position: relative;
-
   width: 100%;
+  height: 100%;
+  background-color: var(--color-bluegray-90);
 
-  background-color: var(--color-bluegray-100);
   background-position: center;
-  background-repeat: no-repeat;
   background-size: cover;
+  background-repeat: no-repeat;
 
-  overflow: hidden;
+  transition: background-image 0.5s ease-in-out;
 }
 
 .hero-overlay {
@@ -249,6 +258,7 @@ footer.footer p:not(:last-child) {
 
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
 
   max-width: 1280px;
   min-height: 500px;
@@ -257,31 +267,29 @@ footer.footer p:not(:last-child) {
 }
 
 .hero-content {
-  display: flex;
-  justify-content: center;
-  flex-direction: column;
-  flex: 1;
-
-  width: 600px;
-}
-
-.hero-rate {
-  display: flex;
-  align-items: center;
-  color: var(--color-yellow);
-  font-size: 1.5rem;
-  font-weight: bold;
+  width: 100%;
+  max-width: 800px;
+  padding: 0 2rem;
+  margin-bottom: 3vh;
+  box-sizing: border-box;
 }
 
 .hero-title {
-  font-size: 3rem;
-  font-weight: bold;
+  font-size: clamp(2rem, 8vw, 4rem);
   line-height: 1.2;
-  margin: 10px 0;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  margin-bottom: 1.5rem;
+}
+
+.hero-rate {
+  font-size: clamp(1rem, 3vw, 1.5rem);
+  margin-bottom: 1rem;
 }
 
 .hero-detail-button {
-  width: 100px;
+  padding: 8px 16px;
+  font-size: 16px;
 }
 
 #see-more-btn {
@@ -319,4 +327,16 @@ footer.footer p:not(:last-child) {
 .no-result-text {
   font-size: 36px;
   font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  #app {
+    padding-bottom: 60px;
+  }
+  .footer {
+    padding: 15px 0;
+  }
+  .footer img {
+    width: 120px;
+  }
 }
