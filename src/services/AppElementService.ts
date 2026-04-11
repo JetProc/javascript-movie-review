@@ -17,7 +17,7 @@ export const getAppElements = (): AppElements => ({
   heroDetailButton: $<HTMLButtonElement>(".hero-detail-button"),
 
   skeletonCard: $<HTMLUListElement>(".skeleton-card"),
-  seeMoreBtn: $<HTMLButtonElement>("#see-more-btn"),
+  infiniteScrollSentinel: $<HTMLDivElement>("#infinite-scroll-sentinel"),
 
   modalBackground: $<HTMLDialogElement>("#modalBackground"),
   closeModal: $<HTMLButtonElement>("#closeModal"),

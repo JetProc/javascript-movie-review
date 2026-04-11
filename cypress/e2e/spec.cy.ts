@@ -147,13 +147,7 @@ const mockMovieDetail = ({
   ).as(alias);
 };
 
-const mockMovieDetailError = ({
-  movieId,
-  alias,
-}: {
-  movieId: number;
-  alias: string;
-}) => {
+const mockMovieDetailError = ({ movieId, alias }: { movieId: number; alias: string }) => {
   cy.intercept(
     {
       method: "GET",
@@ -220,8 +214,8 @@ const expectMovieList = (page: number, titlePrefix: string) => {
   cy.get(".skeleton-card").should("be.empty");
 };
 
-const clickSeeMoreAndVerify = (page: number, alias: string, titlePrefix: string) => {
-  cy.get("#see-more-btn").should("be.visible").click();
+const scrollToSentinelAndVerify = (page: number, alias: string, titlePrefix: string) => {
+  cy.get("#infinite-scroll-sentinel").scrollIntoView();
   expectSkeletonUi();
   cy.wait(`@${alias}`);
   expectMovieList(page, titlePrefix);
@@ -243,10 +237,7 @@ const expectErrorToast = (text: string) => {
 
 const expectNoResultSection = () => {
   cy.get(".no-result").should("be.visible");
-  cy.get(".no-result-image")
-    .should("be.visible")
-    .and("have.attr", "src")
-    .and("include", "no-result-planet.png");
+  cy.get(".no-result-image").should("be.visible").and("have.attr", "src").and("include", "no-result-planet.png");
   cy.get(".no-result-text").should("be.visible").and("have.text", "검색 결과가 없습니다.");
 };
 
@@ -272,7 +263,7 @@ describe("메인 화면", () => {
     Array.from({ length: TOTAL_POPULAR_PAGES }, (_, index) => index + 1).forEach((page) => mockPopularMoviePage(page));
   });
 
-  it("초기 로드 후 더보기 버튼으로 영화 목록을 3번 더 불러온다", () => {
+  it("초기 로드 후 스크롤을 내려 영화 목록을 3번 더 불러온다", () => {
     cy.visit(APP_URL);
 
     expectSkeletonUi();
@@ -281,14 +272,14 @@ describe("메인 화면", () => {
     cy.get("#hero-rate-value").should("have.text", MOVIE_RATE);
     cy.get(".thumbnail-list .rate span").first().should("have.text", MOVIE_RATE);
 
-    clickSeeMoreAndVerify(2, "getPopularMoviesPage2", "인기 영화");
-    clickSeeMoreAndVerify(3, "getPopularMoviesPage3", "인기 영화");
-    clickSeeMoreAndVerify(4, "getPopularMoviesPage4", "인기 영화");
+    scrollToSentinelAndVerify(2, "getPopularMoviesPage2", "인기 영화");
+    scrollToSentinelAndVerify(3, "getPopularMoviesPage3", "인기 영화");
+    scrollToSentinelAndVerify(4, "getPopularMoviesPage4", "인기 영화");
 
-    cy.get("#see-more-btn").should("not.be.visible");
+    cy.get("#infinite-scroll-sentinel").should("not.be.visible");
   });
 
-  it("더보기 요청이 실패하면 에러 토스트를 띄우고 기존 목록을 유지한다", () => {
+  it("스크롤 로딩이 실패하면 에러 토스트를 띄우고 다시 스크롤을 올려서 벗어났다 내려오면 재시도한다", () => {
     mockMoviePageError({
       page: 2,
       pathname: "/3/movie/popular",
@@ -301,7 +292,7 @@ describe("메인 화면", () => {
     cy.wait("@getPopularMoviesPage1");
     expectMovieList(1, "인기 영화");
 
-    cy.get("#see-more-btn").should("be.visible").click();
+    cy.get("#infinite-scroll-sentinel").scrollIntoView();
     expectSkeletonUi();
     cy.wait("@getPopularMoviesPage2Error");
 
@@ -310,7 +301,15 @@ describe("메인 화면", () => {
     cy.get(".movie-section-title").should("have.text", "지금 인기 있는 영화");
     cy.get("#hero-section").should("be.visible");
     cy.get(".no-result").should("not.be.visible");
-    cy.get("#see-more-btn").should("be.visible");
+    cy.get("#infinite-scroll-sentinel").should("exist");
+
+    // 재시도를 위해 모킹을 다시 성공으로 변경하고 상단으로 스크롤(sentinel 화면 이탈) 후 다시 내림
+    mockPopularMoviePage(2, "getPopularMoviesPage2Retry");
+    cy.scrollTo("top");
+    cy.wait(100); // Observer 반응 대기
+    cy.get("#infinite-scroll-sentinel").scrollIntoView();
+    cy.wait("@getPopularMoviesPage2Retry");
+    expectMovieList(2, "인기 영화");
   });
 
   it("썸네일 클릭으로 영화 상세 모달을 열고 닫을 수 있다", () => {
@@ -496,10 +495,10 @@ describe("검색 화면", () => {
     cy.get(".skeleton-card").should("be.empty");
     cy.get(".no-result").should("not.be.visible");
     cy.get("#hero-section").should("be.visible");
-    cy.get("#see-more-btn").should("be.visible");
+    cy.get("#infinite-scroll-sentinel").should("exist");
   });
 
-  it("검색 버튼으로 검색 결과 목록을 끝까지 불러오고 로고로 메인 화면에 돌아간다", () => {
+  it("검색 결과 후 스크롤을 통해 목록을 끝까지 불러오고 로고로 메인 화면에 돌아간다", () => {
     cy.visit(APP_URL);
     cy.wait("@getPopularMoviesPage1");
 
@@ -511,10 +510,10 @@ describe("검색 화면", () => {
     cy.get(".movie-section-title").should("have.text", `"${SEARCH_QUERY}" 검색 결과`);
     expectMovieList(1, `${SEARCH_QUERY} 영화`);
 
-    clickSeeMoreAndVerify(2, "getSearchMoviesPage2", `${SEARCH_QUERY} 영화`);
-    clickSeeMoreAndVerify(3, "getSearchMoviesPage3", `${SEARCH_QUERY} 영화`);
+    scrollToSentinelAndVerify(2, "getSearchMoviesPage2", `${SEARCH_QUERY} 영화`);
+    scrollToSentinelAndVerify(3, "getSearchMoviesPage3", `${SEARCH_QUERY} 영화`);
 
-    cy.get("#see-more-btn").should("not.be.visible");
+    cy.get("#infinite-scroll-sentinel").should("not.be.visible");
 
     mockPopularMoviePage(1, "reloadPopularMoviesPage1");
     cy.get(".logo").click();
@@ -551,9 +550,10 @@ describe("검색 화면", () => {
     cy.get(".movie-section-title").should("have.text", `"${NO_RESULT_SEARCH_QUERY}" 검색 결과`);
     cy.get(".thumbnail-list li").should("have.length", 0);
     cy.get(".skeleton-card").should("be.empty");
+
     expectNoResultSection();
     cy.get("#hero-section").should("not.be.visible");
-    cy.get("#see-more-btn").should("not.be.visible");
+    cy.get("#infinite-scroll-sentinel").should("not.be.visible");
   });
 
   it("검색 요청이 실패하면 에러 토스트를 띄우고 기존 메인 목록을 유지한다", () => {
@@ -580,7 +580,7 @@ describe("검색 화면", () => {
     cy.get("#search-input").should("have.value", SEARCH_QUERY);
     cy.get("#hero-section").should("be.visible");
     cy.get(".no-result").should("not.be.visible");
-    cy.get("#see-more-btn").should("be.visible");
+    cy.get("#infinite-scroll-sentinel").should("exist");
   });
 
   it("검색어와 영화 제목에 HTML이 포함되어도 텍스트로만 렌더링한다", () => {

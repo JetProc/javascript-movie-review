@@ -20,6 +20,9 @@ import { createMovieRatingRepository } from "./repositories/MovieRatingRepositor
 const state: State = createInitialMoviePageState();
 const movieRatingRepository = createMovieRatingRepository();
 
+let isLoading = false;
+let failedPage: number | null = null;
+
 const clearSkeleton = (elements: AppElements) => {
   elements.skeletonCard.replaceChildren();
 };
@@ -82,6 +85,13 @@ const hydrateMoviesWithUserRatings = async (movieList: State["movieList"]) => {
 };
 
 const loadMovies = async (elements: AppElements, query: string = state.query, shouldReset = false) => {
+  if (isLoading) return;
+  isLoading = true;
+
+  if (shouldReset) {
+    failedPage = null;
+  }
+
   const nextPage = shouldReset ? 1 : state.currentPage + 1;
 
   makeSkeleton(elements.skeletonCard);
@@ -95,16 +105,33 @@ const loadMovies = async (elements: AppElements, query: string = state.query, sh
     syncMovieSectionTitle(elements, state);
     renderMovies(state.movieList, elements.movieList);
     syncMoviePage(elements, state);
+    failedPage = null; // 성공 시 에러 상태 리셋
+  } catch (error) {
+    failedPage = nextPage; // 실패한 페이지 기억
+    throw error;
   } finally {
     clearSkeleton(elements);
+    isLoading = false; // 로딩 상태 해제
   }
 };
 
 const bindEvents = (elements: AppElements, detailController: ReturnType<typeof createMovieDetailController>) => {
-  elements.seeMoreBtn.addEventListener("click", async (event) => {
-    event.preventDefault();
-    await executeWithErrorHandling(elements, () => loadMovies(elements));
+  const observer = new IntersectionObserver(async (entries) => {
+    const entry = entries[0];
+    if (!entry.isIntersecting) {
+      failedPage = null; // 화면 밖으로 벗어나면 실패 상태 초기화하여 다시 접근 시 재시도 허용
+      return;
+    }
+
+    const hasMorePages = state.currentPage < state.totalPage;
+    const isFailedCurrentNextPage = failedPage === state.currentPage + 1;
+
+    if (!isLoading && hasMorePages && !isFailedCurrentNextPage) {
+      await executeWithErrorHandling(elements, () => loadMovies(elements));
+    }
   });
+
+  observer.observe(elements.infiniteScrollSentinel);
 
   elements.movieList.addEventListener("click", async (event) => {
     const movieId = getMovieIdFromTarget(event.target);
