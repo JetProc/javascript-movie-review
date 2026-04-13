@@ -23,6 +23,7 @@ const createMovieListItemElement = (movie: Movie) => {
 
   thumbnail.className = "thumbnail";
   thumbnail.src = posterImageUrl;
+  thumbnail.alt = "영화 포스터 썸네일 이미지";
 
   itemDesc.className = "item-desc";
 
