@@ -195,7 +195,7 @@ body.modal-open {
   overflow-y: auto;
   padding-right: 8px;
 }
-@keyframes slideUp {
+@keyframes slide-up {
   from {
     transform: translateY(100%);
   }
@@ -218,7 +218,7 @@ body.modal-open {
   }
 
   .modal-background[open] .modal {
-    animation: slideUp 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    animation: slide-up 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
   }
 
   .modal {
