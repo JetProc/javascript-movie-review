@@ -15,10 +15,16 @@ export interface MovieRatingRepository {
 
 //로컬스토리지로 사용하기 위해 인터페이스 가져다가 사용
 class LocalStorageMovieRatingRepository implements MovieRatingRepository {
+  private memoryCache: StoredMovieRatings | null = null;
+
   constructor(private storage?: StorageLike | null) {}
 
   //get ratings in localstorage
   private readRatings(): StoredMovieRatings {
+    if (this.memoryCache) {
+      return this.memoryCache;
+    }
+
     if (!this.storage) {
       return {};
     }
@@ -52,10 +58,16 @@ class LocalStorageMovieRatingRepository implements MovieRatingRepository {
   //set ratings in localstorage
   private writeRatings(ratings: StoredMovieRatings) {
     if (!this.storage) {
+      this.memoryCache = ratings;
       return;
     }
 
-    this.storage.setItem(MOVIE_USER_RATING_STORAGE_KEY, JSON.stringify(ratings));
+    try {
+      this.storage.setItem(MOVIE_USER_RATING_STORAGE_KEY, JSON.stringify(ratings));
+    } catch (error) {
+      console.error("Failed to save ratings to storage:", error);
+      this.memoryCache = ratings;
+    }
   }
 
   async get(movieId: number) {
