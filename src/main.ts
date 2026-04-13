@@ -223,7 +223,7 @@ const bindEvents = (elements: AppElements, detailController: ReturnType<typeof c
       }
 
       try {
-        await detailController.updateUserRating(ratingValue as MovieUserRating);
+        await detailController.updateUserRating(ratingValue);
       } catch (error) {
         notifyError(error);
       }
