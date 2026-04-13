@@ -45,7 +45,6 @@
   flex-direction: column;
   user-select: none;
   cursor: pointer;
-  outline: none;
   transform-origin: center;
   transition: transform 0.22s ease;
   will-change: transform;
@@ -62,6 +61,8 @@
 }
 
 .item:focus-visible {
+  outline: 3px solid var(--color-lightblue-90);
+  outline-offset: 4px;
   transform: translateY(-6px) scale(1.02);
 }
 
