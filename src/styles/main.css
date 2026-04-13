@@ -1,5 +1,9 @@
 @import "./colors.css";
 
+:root {
+  --footer-height: 120px;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -89,7 +93,7 @@ button.primary {
 }
 
 #app {
-  padding-bottom: 80px;
+  padding-bottom: var(--footer-height);
   box-sizing: border-box;
 }
 
@@ -126,6 +130,7 @@ span.rate-value {
   bottom: 0;
   left: 0;
   width: 100%;
+  min-height: var(--footer-height);
   background-color: var(--color-bluegray-80, #000);
   z-index: 1000;
   padding: 20px 0;
@@ -330,8 +335,11 @@ footer.footer p:not(:last-child) {
 }
 
 @media (max-width: 768px) {
+  :root {
+    --footer-height: 90px;
+  }
   #app {
-    padding-bottom: 60px;
+    padding-bottom: var(--footer-height);
   }
   .footer {
     padding: 15px 0;
