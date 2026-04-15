@@ -28,7 +28,6 @@ const clearSkeleton = (elements: AppElements) => {
 };
 
 const handleAsyncError = (elements: AppElements, error: unknown) => {
-  clearSkeleton(elements);
   syncMoviePage(elements, state);
   notifyError(error);
 };
@@ -105,13 +104,13 @@ const loadMovies = async (elements: AppElements, query: string = state.query, sh
     syncMovieSectionTitle(elements, state);
     renderMovies(state.movieList, elements.movieList);
     syncMoviePage(elements, state);
-    failedPage = null; // 성공 시 에러 상태 리셋
+    failedPage = null;
   } catch (error) {
-    failedPage = nextPage; // 실패한 페이지 기억
+    failedPage = nextPage;
     throw error;
   } finally {
     clearSkeleton(elements);
-    isLoading = false; // 로딩 상태 해제
+    isLoading = false;
   }
 };
 
